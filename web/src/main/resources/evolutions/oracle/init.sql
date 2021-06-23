@@ -1,0 +1,53 @@
+create schema EDU_EXTERN;
+create table EDU_EXTERN.EXAM_CATEGORIES (ID number(10,0) not null, BEGIN_ON date not null, END_ON date, UPDATED_AT date not null, CODE varchar2(20) not null unique, EN_NAME varchar2(300), NAME varchar2(100) not null, REMARK varchar2(200));
+create table EDU_EXTERN.EXAM_SUBJECTS (ID number(10,0) not null, BEGIN_ON date not null, CATEGORY_ID number(10,0) not null, INSTITUTION_CODE varchar2(255), END_ON date, INSTITUTION_NAME varchar2(255), UPDATED_AT date not null, CODE varchar2(20) not null unique, EN_NAME varchar2(300), NAME varchar2(100) not null, REMARK varchar2(200));
+create table EDU_EXTERN.EXEMPTION_CREDITS (STD_ID number(19,0) not null, ID number(19,0) not null, EXEMPTED float not null, MAX_VALUE float not null);
+create table EDU_EXTERN.EXTERN_EXAM_GRADES (CERTIFICATE varchar2(80), ACQUIRED_ON date not null, SCORE float, PASSED number(1,0) not null, STD_ID number(19,0) not null, EXAM_NO varchar2(80), ID number(19,0) not null, STATUS number(10,0) not null, GRADING_MODE_ID number(10,0) not null, SCORE_TEXT varchar2(5) not null, SUBJECT_ID number(10,0) not null, EXAM_STATUS_ID number(10,0) not null);
+create table EDU_EXTERN.EXTERN_EXAM_GRADES_GRADES (EXTERN_EXAM_GRADE_ID number(19,0) not null, COURSE_GRADE_ID number(19,0) not null);
+create table EDU_EXTERN.EXTERN_GRADES (SCHOOL_ID number(10,0) not null, MAJOR_NAME varchar2(255), ACQUIRED_ON date not null, STD_ID number(19,0) not null, ID number(19,0) not null, CATEGORY_ID number(10,0) not null, COURSE_NAME varchar2(255) not null, SCORE_TEXT varchar2(255) not null, LEVEL_ID number(10,0) not null, PASSED number(1,0) not null, CREDITS float not null);
+create table EDU_EXTERN.EXTERN_GRADES_GRADES (EXTERN_GRADE_ID number(19,0) not null, COURSE_GRADE_ID number(19,0) not null);
+create table EDU_EXTERN.EXTERN_MARKS (ACQUIRED_ON date not null, CREDITS float not null, ID number(19,0) not null, REMARK varchar2(255), EXTERN_STUDENT_ID number(19,0) not null, COURSE_NAME varchar2(255) not null, SCORE_TEXT varchar2(10) not null);
+create table EDU_EXTERN.EXTERN_MARKS_COURSES (EXTERN_MARK_ID number(19,0) not null, COURSE_ID number(19,0) not null);
+create table EDU_EXTERN.EXTERN_SCHOOLS (PROJECT_ID number(10,0) not null, CODE varchar2(255) not null, ID number(10,0) not null, BEGIN_ON date not null, END_ON date, NAME varchar2(255) not null, UPDATED_AT date not null);
+create table EDU_EXTERN.EXTERN_STUDENTS (EXEMPTION_CREDITS float not null, SCHOOL_ID number(10,0) not null, UPDATED_AT date not null, MAJOR_NAME varchar2(255), STATE number(10,0) not null, CREDITS float not null, STD_ID number(19,0) not null, ID number(19,0) not null, BEGIN_ON date not null, LEVEL_ID number(10,0) not null, AUDIT_OPINION varchar2(255), CATEGORY_ID number(10,0) not null, END_ON date not null, TRANSCRIPT_PATH varchar2(255));
+
+alter table EDU_EXTERN.EXAM_CATEGORIES add constraint PK_2WM17O8VK42OC5UQNMNUH4YNV primary key (ID);
+alter table EDU_EXTERN.EXAM_SUBJECTS add constraint PK_9RAVVV5XOAMCLH55KAE8Q8H6W primary key (ID);
+alter table EDU_EXTERN.EXEMPTION_CREDITS add constraint PK_BC2ISQJQN906UY4UAI64TTCHK primary key (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES add constraint PK_HU303GLBGX67UVOHW7RTH3PUC primary key (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES_GRADES add constraint PK_GC000AYHPLM2T77OEYOTHB8S2 primary key (EXTERN_EXAM_GRADE_ID,COURSE_GRADE_ID);
+alter table EDU_EXTERN.EXTERN_GRADES add constraint PK_E24OW5UE4E8H8YUECLKKK429X primary key (ID);
+alter table EDU_EXTERN.EXTERN_GRADES_GRADES add constraint PK_GYOD4PFF50883C332D85GJLLA primary key (EXTERN_GRADE_ID,COURSE_GRADE_ID);
+alter table EDU_EXTERN.EXTERN_MARKS add constraint PK_D9F5VTN2AQKGSDTE1WKVWKG50 primary key (ID);
+alter table EDU_EXTERN.EXTERN_MARKS_COURSES add constraint PK_C7F8MR3P0H87Q9MRTQUMCHU0C primary key (EXTERN_MARK_ID,COURSE_ID);
+alter table EDU_EXTERN.EXTERN_SCHOOLS add constraint PK_GMTWM69EX56XEJB0527PMSO6M primary key (ID);
+alter table EDU_EXTERN.EXTERN_STUDENTS add constraint PK_BK45Q6MH979IHH5B7AYT4L6KU primary key (ID);
+
+create index IDX_CEYVSF04C8OA2UW4DBTA0OAXR on EDU_EXTERN.EXTERN_MARKS_COURSES (EXTERN_MARK_ID);
+create index IDX_7L4343NXT7B81AY2H4C9V0I5D on EDU_EXTERN.EXTERN_MARKS (EXTERN_STUDENT_ID);
+create index IDX_E98KNDS0N7FK1NPWW72IOSDEA on EDU_EXTERN.EXTERN_GRADES_GRADES (EXTERN_GRADE_ID);
+create index IDX_FVMK6FDG0AVWJY4OAPBGS82OR on EDU_EXTERN.EXTERN_EXAM_GRADES_GRADES (EXTERN_EXAM_GRADE_ID);
+
+alter table EDU_EXTERN.EXAM_SUBJECTS add constraint FK_80LQ0VMPCYCB2583EBHO292V7 foreign key (CATEGORY_ID) references EDU_EXTERN.EXAM_CATEGORIES (ID);
+alter table EDU_EXTERN.EXEMPTION_CREDITS add constraint FK_1XS4CW452BJ6VJQKP7RBJ26L3 foreign key (STD_ID) references EDU_BASE.STUDENTS (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES add constraint FK_138DP5KT1NBAFBFC1RQXMUHAG foreign key (SUBJECT_ID) references EDU_EXTERN.EXAM_SUBJECTS (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES add constraint FK_5SXO7H4XDFVGPH1AVO09XINQH foreign key (EXAM_STATUS_ID) references CODE_HB.EXAM_STATUSES (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES add constraint FK_K7N8CYMJ0VV6QO0G39RNN74RG foreign key (GRADING_MODE_ID) references CODE_HB.GRADING_MODES (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES add constraint FK_L9PPM9JFR86IVRQFLHYI801SE foreign key (STD_ID) references EDU_BASE.STUDENTS (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES_GRADES add constraint FK_J4XYVEBS22M5V57CTQYF67H0X foreign key (EXTERN_EXAM_GRADE_ID) references EDU_EXTERN.EXTERN_EXAM_GRADES (ID);
+alter table EDU_EXTERN.EXTERN_EXAM_GRADES_GRADES add constraint FK_KLBLC20VOU00RG9Q8YWGSK02V foreign key (COURSE_GRADE_ID) references EDU_GRADE.COURSE_GRADES (ID);
+alter table EDU_EXTERN.EXTERN_GRADES add constraint FK_1NOIE5EEFGDS4TMNLFOY00KEY foreign key (SCHOOL_ID) references EDU_EXTERN.EXTERN_SCHOOLS (ID);
+alter table EDU_EXTERN.EXTERN_GRADES add constraint FK_287X5CDA3XHYM95WKEM98H7AR foreign key (LEVEL_ID) references CODE_HB.EDUCATION_LEVELS (ID);
+alter table EDU_EXTERN.EXTERN_GRADES add constraint FK_CDHONM59A3PCQ2EKVP6PJ725H foreign key (STD_ID) references EDU_BASE.STUDENTS (ID);
+alter table EDU_EXTERN.EXTERN_GRADES add constraint FK_QUEX0WBTOIXXXFX9FDXKMB167 foreign key (CATEGORY_ID) references CODE_HB.EDU_CATEGORIES (ID);
+alter table EDU_EXTERN.EXTERN_GRADES_GRADES add constraint FK_5L82L4N1ARJT9H8PQR820QDAX foreign key (EXTERN_GRADE_ID) references EDU_EXTERN.EXTERN_GRADES (ID);
+alter table EDU_EXTERN.EXTERN_GRADES_GRADES add constraint FK_9MEQ1CWQTN20JNEHLAYXEFSWT foreign key (COURSE_GRADE_ID) references EDU_GRADE.COURSE_GRADES (ID);
+alter table EDU_EXTERN.EXTERN_MARKS add constraint FK_2DKGG2PO9R8E9V2GV4R934HXI foreign key (EXTERN_STUDENT_ID) references EDU_EXTERN.EXTERN_STUDENTS (ID);
+alter table EDU_EXTERN.EXTERN_MARKS_COURSES add constraint FK_CLYTBEKUF0AND1AJU0YFD6YL4 foreign key (COURSE_ID) references EDU_BASE.COURSES (ID);
+alter table EDU_EXTERN.EXTERN_MARKS_COURSES add constraint FK_DADB29VX3VEIB9VGRHAD3Q8KD foreign key (EXTERN_MARK_ID) references EDU_EXTERN.EXTERN_MARKS (ID);
+alter table EDU_EXTERN.EXTERN_SCHOOLS add constraint FK_MT1CHLMKD754BHDOG2YRQGLFW foreign key (PROJECT_ID) references EDU_BASE.PROJECTS (ID);
+alter table EDU_EXTERN.EXTERN_STUDENTS add constraint FK_9BT86TG1RUNXRCMCN6HPC6NO foreign key (STD_ID) references EDU_BASE.STUDENTS (ID);
+alter table EDU_EXTERN.EXTERN_STUDENTS add constraint FK_FTIQRI2IR2I248W3OE3OGY89Y foreign key (LEVEL_ID) references CODE_HB.EDUCATION_LEVELS (ID);
+alter table EDU_EXTERN.EXTERN_STUDENTS add constraint FK_PY1TS28AYVKMB0P7DLDVK4MVL foreign key (SCHOOL_ID) references EDU_EXTERN.EXTERN_SCHOOLS (ID);
+alter table EDU_EXTERN.EXTERN_STUDENTS add constraint FK_QK79CMY3OTCWUP83W3DFUEIOB foreign key (CATEGORY_ID) references CODE_HB.EDU_CATEGORIES (ID);
+

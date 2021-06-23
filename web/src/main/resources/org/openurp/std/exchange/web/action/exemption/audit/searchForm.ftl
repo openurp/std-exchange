@@ -1,0 +1,6 @@
+[#ftl/]
+[@b.textfield name="apply.externStudent.std.user.code" label="学号"/]
+[@b.textfield name="apply.externStudent.std.user.name" label="姓名"/]
+[@b.textfield name="apply.externStudent.std.state.grade" label="年级"/]
+[@b.textfield name="apply.externStudent.std.state.major.name" label="专业"/]
+[@b.select name="apply.externStudent.std.state.status.id" label="学籍状态" items=studentStatuses empty="..."/]
