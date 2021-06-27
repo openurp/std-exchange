@@ -1,0 +1,6 @@
+[#ftl]
+  [@b.nav class="nav-tabs nav-tabs-compact"]
+    [@b.navitem href="/signup/scheme"]报名设置[/@]
+    [@b.navitem href="/program"]交换计划[/@]
+    [@b.navitem href="/school"]外校信息[/@]
+  [/@]

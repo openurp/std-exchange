@@ -16,15 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openurp.std.exchange.web.action.exemption
+package org.openurp.std.exchange.app.model
 
-import org.beangle.cdi.bind.BindModule
+import org.beangle.data.orm.{IdGenerator, MappingModule}
 
-class DefaultModule extends BindModule {
+class DefaultMapping extends MappingModule {
 
-  override protected def binding(): Unit = {
-    bind(classOf[CreditAction])
-    bind(classOf[AuditAction])
-    bind(classOf[GradeAction])
+  def binding(): Unit = {
+
+    bind[ExchangeScheme]
+
+    bind[ExchangeApply] declare { e =>
+      e.choices is depends("apply")
+      e.statements is length(3000)
+    }
+
+    bind[ExchangeApplyChoice]
+
   }
+
 }

@@ -16,15 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openurp.std.exchange.web.action.exemption
+package org.openurp.std.exchange.web.action
 
-import org.beangle.cdi.bind.BindModule
+import org.beangle.webmvc.entity.action.RestfulAction
+import org.openurp.base.model.ExternSchool
 
-class DefaultModule extends BindModule {
+class SchoolAction extends RestfulAction[ExternSchool] {
 
-  override protected def binding(): Unit = {
-    bind(classOf[CreditAction])
-    bind(classOf[AuditAction])
-    bind(classOf[GradeAction])
-  }
 }

@@ -1,0 +1,16 @@
+[#ftl]
+[@b.head/]
+[@b.toolbar  title="交换生项目"]bar.addBack();[/@]
+[@b.tabs]
+  [@b.form action=b.rest.save(exchangeProgram) theme="list" ]
+    [@b.textfield name="exchangeProgram.name" label="名称" value=exchangeProgram.name! required="true" /]
+    [@b.startend label="有效期限"
+      name="exchangeProgram.beginOn,exchangeProgram.endOn" required="true,false"
+      start=exchangeProgram.beginOn end=exchangeProgram.endOn format="yyyy-MM-dd"/]
+    [@b.select label="学校" multiple="true" name="schoolId" items=schools values=exchangeProgram.schools required="true"/]
+    [@b.formfoot]
+      [@b.reset/]&nbsp;&nbsp;[@b.submit value="action.submit"/]
+    [/@]
+  [/@]
+[/@]
+[@b.foot/]

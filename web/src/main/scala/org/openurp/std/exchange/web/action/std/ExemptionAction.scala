@@ -182,7 +182,6 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
-
   /** 第三步编辑免修关系
    *
    * @return
@@ -244,7 +243,6 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
       redirect("editApplies", "&externStudent.id=" + apply.id, "超出认定学分上限，请重新选择课程")
     }
   }
-
 
   @mapping(method = "delete")
   override def remove(): View = {

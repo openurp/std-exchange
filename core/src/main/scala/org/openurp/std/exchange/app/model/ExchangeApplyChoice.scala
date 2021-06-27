@@ -16,15 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openurp.std.exchange.web.action.exemption
+package org.openurp.std.exchange.app.model
 
-import org.beangle.cdi.bind.BindModule
+import org.beangle.data.model.LongId
+import org.openurp.base.model.ExternSchool
 
-class DefaultModule extends BindModule {
+class ExchangeApplyChoice extends LongId {
 
-  override protected def binding(): Unit = {
-    bind(classOf[CreditAction])
-    bind(classOf[AuditAction])
-    bind(classOf[GradeAction])
-  }
+  var apply: ExchangeApply = _
+
+  var idx: Int = _
+
+  var school: ExternSchool = _
+
+  var major: String = _
 }

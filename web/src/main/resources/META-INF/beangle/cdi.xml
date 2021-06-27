@@ -5,6 +5,7 @@
     <module class="org.openurp.std.exchange.web.action.std.DefaultModule" />
     <module class="org.openurp.std.exchange.web.action.depart.DefaultModule" />
     <module class="org.openurp.std.exchange.web.action.exemption.DefaultModule" />
+    <module class="org.openurp.std.exchange.web.action.signup.DefaultModule" />
   </container>
   <container>
     <module class="org.openurp.std.exchange.service.DefaultModule" />

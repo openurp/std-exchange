@@ -16,11 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.openurp.std.exchange.web.action.exemption
+package org.openurp.std.exchange.app.model
 
-import org.beangle.webmvc.entity.action.RestfulAction
+import org.beangle.commons.collection.Collections
+import org.beangle.data.model.LongId
+import org.beangle.data.model.pojo.{InstantRange, Named}
+import org.openurp.base.edu.model.Project
 import org.openurp.base.model.ExternSchool
+import org.openurp.std.exchange.model.ExchangeProgram
 
-class SchoolAction extends RestfulAction[ExternSchool] {
+import java.time.Instant
+import scala.collection.mutable
 
+class ExchangeScheme extends LongId with InstantRange with Named {
+
+  var project: Project = _
+
+  var program: ExchangeProgram = _
+
+  var grades: String = _
+
+  var schools: mutable.Buffer[ExternSchool] = Collections.newBuffer[ExternSchool]
+
+  def opened: Boolean = {
+    this.within(Instant.now)
+  }
 }

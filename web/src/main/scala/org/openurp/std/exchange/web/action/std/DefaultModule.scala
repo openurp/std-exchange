@@ -24,5 +24,6 @@ class DefaultModule extends BindModule {
 
   override protected def binding(): Unit = {
     bind(classOf[ExemptionAction])
+    bind(classOf[SignupAction])
   }
 }
