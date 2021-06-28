@@ -95,10 +95,10 @@
     </table>
 <script>
 function popupCommonWindow(url){
-	var name = '';
-	if (popupCommonWindow.arguments.length > 1){
-		name = popupCommonWindow.arguments[1];
-	}
+  var name = '';
+  if (popupCommonWindow.arguments.length > 1){
+    name = popupCommonWindow.arguments[1];
+  }
 
     var width = 500;
     var height = 600;
@@ -108,8 +108,8 @@ function popupCommonWindow(url){
        height = popupCommonWindow.arguments[3];
 
     var win = window.open(url, name, 'scrollbars=yes,width='+width+',height='+height+',status=no,resizable=yes,depended=yes');
-	win.self.resizeTo(width, height);
-	win.self.moveTo((screen.width-width)/2, (screen.height-height)/2);
-	win.self.focus();
+  win.self.resizeTo(width, height);
+  win.self.moveTo((screen.width-width)/2, (screen.height-height)/2);
+  win.self.focus();
 }
 </script>
