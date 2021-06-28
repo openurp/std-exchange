@@ -19,13 +19,16 @@
 package org.openurp.std.exchange.web.action.std
 
 import org.beangle.commons.activation.MediaTypes
+import org.beangle.commons.codec.digest.Digests
 import org.beangle.commons.lang.Strings
 import org.beangle.data.dao.OqlBuilder
+import org.beangle.ems.app.Ems
 import org.beangle.webmvc.api.view.{Stream, View}
 import org.beangle.webmvc.entity.action.EntityAction
 import org.openurp.base.edu.model.Student
 import org.openurp.base.model.{ExternSchool, Person}
 import org.openurp.code.person.model.{FamilyRelationship, Nation, PoliticalStatus}
+import org.openurp.edu.grade.course.model.StdGpa
 import org.openurp.starter.edu.helper.ProjectSupport
 import org.openurp.std.exchange.app.model.{ExchangeApply, ExchangeApplyChoice, ExchangeScheme}
 import org.openurp.std.exchange.web.helper.DocHelper
@@ -63,6 +66,9 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
 
     put("schemes", avaliableSchemes)
     put("std", std)
+    put("stdGpa",getStdGpa(std))
+    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(std.user.code))
+    put("avatar_upload_url", Ems.base + "/portal/user/avatar")
     if (applies.nonEmpty) {
       forward()
     } else {
@@ -174,6 +180,11 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     apply.scheme = scheme
     put("scheme", scheme)
     put("std", std)
+    val stdGpa = getStdGpa(std)
+    apply.gpa = stdGpa.gpa
+    apply.credits = stdGpa.credits
+
+    put("stdGpa",stdGpa)
     put("apply", apply)
     forward()
   }
@@ -200,26 +211,18 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
         if (!choice.persisted) apply.choices += choice
       }
     }
+
     val contacts = entityDao.findBy(classOf[Contact], "std", List(std))
     val contact = contacts.headOption.getOrElse(new Contact)
     apply.email = std.user.email.get
     apply.mobile = std.user.mobile.get
     apply.address = contact.address.get
+    val stdGpa= getStdGpa(std)
+    apply.gpa = stdGpa.gpa
+    apply.credits = stdGpa.credits
 
     entityDao.saveOrUpdate(apply)
     redirect("index", "info.save.success")
-  }
-
-  def edit(): View = {
-    val std = getUser(classOf[Student])
-    val schemeId = longId("scheme")
-    val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
-    val apply = getApply(std, scheme)
-    apply.std = std
-    apply.scheme = scheme
-    put("scheme", scheme)
-    put("apply", apply)
-    forward()
   }
 
   def remove(): View = {
@@ -238,9 +241,18 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     val schemeId = longId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
-    val bytes = DocHelper.toDoc(apply,entityDao)
+    val bytes = DocHelper.toDoc(apply, entityDao)
     val contentType = MediaTypes.get("docx", MediaTypes.ApplicationOctetStream).toString
     Stream(new ByteArrayInputStream(bytes), contentType, std.user.code + "_" + std.user.name + "_" + apply.scheme.program.name + "_申请表.docx")
+  }
+
+  /** 查询Gpa
+   *
+   * @return
+   */
+  private def getStdGpa(std: Student): StdGpa = {
+    val stdGpas = entityDao.findBy(classOf[StdGpa], "std", List(std))
+    stdGpas.headOption.getOrElse(new StdGpa)
   }
 
   private def getApply(std: Student, scheme: ExchangeScheme): ExchangeApply = {

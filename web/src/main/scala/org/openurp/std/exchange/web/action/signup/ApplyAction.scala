@@ -19,7 +19,9 @@
 package org.openurp.std.exchange.web.action.signup
 
 import org.beangle.commons.activation.MediaTypes
+import org.beangle.commons.codec.digest.Digests
 import org.beangle.data.dao.OqlBuilder
+import org.beangle.ems.app.Ems
 import org.beangle.webmvc.api.annotation.{mapping, param}
 import org.beangle.webmvc.api.view.{Stream, View}
 import org.beangle.webmvc.entity.action.RestfulAction
@@ -55,7 +57,7 @@ class ApplyAction extends RestfulAction[ExchangeApply] with ProjectSupport {
     val homes = entityDao.findBy(classOf[Home], "std", List(apply.std))
     val home = homes.headOption.getOrElse(new Home)
     put("home", home)
-
+    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(apply.std.user.code))
     put("exchangeApply", apply)
     forward()
   }

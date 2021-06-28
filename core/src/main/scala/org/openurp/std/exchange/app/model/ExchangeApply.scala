@@ -48,7 +48,7 @@ class ExchangeApply extends LongId with Updated {
   var gpa: Float = _
 
   /** 累计获得总学分 */
-  var credits: Int = _
+  var credits: Float = _
 
   /** 专业排名 */
   var rankInMajor: String = _

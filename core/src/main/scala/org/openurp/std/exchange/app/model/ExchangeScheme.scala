@@ -36,6 +36,10 @@ class ExchangeScheme extends LongId with InstantRange with Named {
 
   var grades: String = _
 
+  var minGpa: Float = _
+
+  var choiceCount: Int = _
+
   var schools: mutable.Buffer[ExternSchool] = Collections.newBuffer[ExternSchool]
 
   def opened: Boolean = {

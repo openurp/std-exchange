@@ -20,8 +20,8 @@
     [@b.field label="年级"]${std.state.grade}[/@]
     [@b.field label="院系"]${std.state.department.name}[/@]
     [@b.field label="专业"]${std.state.major.name} ${(std.state.direction.name)!}[/@]
-    [@b.textfield label="平均绩点" name="apply.gpa" value=apply.gpa! required="true" /]
-    [@b.number label="累计获得总学分" name="apply.credits" value=apply.credits! required="true"/]
+    [@b.textfield label="平均绩点" name="apply.gpa" value=apply.gpa! required="true" readOnly="true" /]
+    [@b.textfield label="累计获得总学分" name="apply.credits" value=apply.credits! required="true" readOnly="true" /]
     [@b.textfield label="成绩排名" name="apply.rankInMajor" value=apply.rankInMajor! required="true"
                   placeholder="名次/同专业学生人数" comment="名次/同专业学生人数"/]
     [#list 1..2 as idx]

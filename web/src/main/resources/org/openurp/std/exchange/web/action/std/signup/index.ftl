@@ -8,7 +8,7 @@
     </div>
     <ul class="nav navbar-nav navbar-right">
         <li>
-        [@b.form class="navbar-form navbar-left" role="search" action="!edit"]
+        [@b.form class="navbar-form navbar-left" role="search" action="!editPerson"]
             [#list schemes as p]
             [@b.a class="btn btn-sm btn-info" href="!editPerson?schemeId="+p.id]<i class="fas fa-plus"></i>添加[/@]
             [/#list]
