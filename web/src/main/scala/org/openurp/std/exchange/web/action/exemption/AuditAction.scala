@@ -105,11 +105,13 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   def audit(): View = {
     val esId = longId("apply")
+    val auditOpinion = get("auditOpinion")
     val apply = entityDao.get(classOf[ExemptionApply], esId)
     val passed = getBoolean("passed", false)
     val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
       .where("eg.externStudent=:es", apply.externStudent)
     val grades = entityDao.search(gradeQuery)
+    apply.auditOpinion = auditOpinion
     if (passed) {
       apply.auditState = AuditStates.Finalized
       val courseTypes = buildCourseTypes(apply.externStudent.std)

@@ -26,7 +26,7 @@
          [#else]--[/#if]
       </td>
       <td class="title">审核状态：</td>
-      <td><span class="[#if apply.auditState=="通过"]text-success[#else]text-danger[/#if]">${apply.auditState}${apply.auditOpinion!}</span></td>
+      <td><span class="[#if apply.auditState=="通过"]text-success[#else]text-danger[/#if]">${apply.auditState} ${apply.auditOpinion!}</span></td>
     </tr>
   </table>
   [#if gradeMap.get(externStudent)??]
