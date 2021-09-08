@@ -29,11 +29,11 @@
      [@b.a href="!editExternStudent?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>修改[/@]
      [@b.a href="!editApplies?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>匹配冲抵[/@]
      </div>
-       [@b.a href="!remove?apply.id="+apply.id + "&project.id=" + apply.externStudent.std.project.id  onclick="return removeExtern(${apply.id});" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
+       [@b.a href="!remove?apply.id="+apply.id + "&project.id=" + apply.externStudent.std.project.id  onclick="return removeExtern('${externStudent.id}');" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
      [/#if]
   [#else]
+     [@b.a href="!remove?externStudent.id="+externStudent.id + "&project.id=" + externStudent.std.project.id  onclick="return removeExtern('${externStudent.id}');" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
      [@b.a href="!editGrades?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>开始申请[/@]
-     [@b.a href="!remove?externStudent.id="+externStudent.id + "&project.id=" + externStudent.std.project.id  onclick="return removeExtern(${apply.id});" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
   [/#if]
   [/#assign]
   [@b.card class="card-info card-outline"]

@@ -113,6 +113,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
             school.updatedAt = Instant.now
             school.code = "user_add_" + System.currentTimeMillis()
             entityDao.saveOrUpdate(school)
+
           }
         }
     }
@@ -120,6 +121,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val externStudent = populateEntity(classOf[ExternStudent], "externStudent")
     externStudent.std = std
     externStudent.updatedAt = Instant.now
+    externStudent.school=school
     entityDao.saveOrUpdate(externStudent)
     redirect("editGrades", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
@@ -199,7 +201,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
       .where("eg.externStudent  =:es", externStudent)
     val grades = entityDao.search(gradeQuery)
     put("grades", grades)
-    put("planCourses", getPlanCourses(apply.externStudent.std))
+    put("planCourses", getPlanCourses(externStudent.std))
     forward()
   }
 
@@ -283,6 +285,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
   private def getPlanCourses(std: Student): collection.Seq[Course] = {
     val courses = Collections.newSet[Course]
     val emptyCourseTypes = Collections.newSet[CourseType]
+
     coursePlanProvider.getCoursePlan(std) foreach { plan =>
       for (group <- plan.groups) {
         if (group.planCourses.isEmpty && group.children.isEmpty) {
@@ -304,7 +307,9 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val query = OqlBuilder.from[Course](classOf[CourseGrade].getName, "cg")
     query.where("cg.std=:std and cg.passed=true", std)
     query.select("cg.course")
-    courses.subtractAll(entityDao.search(query))
+    val hasGrade = entityDao.search(query)
+
+    courses.subtractAll(hasGrade)
     courses.toBuffer
   }
 

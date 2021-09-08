@@ -14,7 +14,7 @@
     [/#if]
     [#assign planCourseList = planCourses?sort_by("code")/]
   [@b.form name="externStudentForm" action="!saveApplies" theme="list"]
-    [@b.field label="学号"]${(externStudent.std.user.code)!} ${(externStudent.std.user.name)!}[/@]
+    [@b.field label="学 号"]${(externStudent.std.user.code)!} ${(externStudent.std.user.name)!}[/@]
     [@b.field label="校外学校"]${externStudent.school.name}(${externStudent.beginOn?string("yyyy-MM")}~${externStudent.endOn?string("yyyy-MM")})[/@]
     [@b.textfield name="comment" label="免修冲抵" disable="true" value="在下面每个成绩中选择一个我校课程，进行匹配冲抵。" style="width:300px;border:0px" comment="外校课程学习成绩"+creditLimitComment/]
     [#list grades?sort_by("id") as m]
