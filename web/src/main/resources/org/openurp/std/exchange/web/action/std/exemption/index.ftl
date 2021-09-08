@@ -19,7 +19,7 @@
 </nav>
 
   [#list externStudents as externStudent]
-  [@b.form name="removeExternForm_"+externStudent.id  action="!remove?id="+externStudent.id + "&project.id="+externStudent.std.project.id + "&_method=delete"][/@]
+  [@b.form name="removeExternForm_"+externStudent.id  action="!remove?externStudent.id="+externStudent.id + "&project.id="+externStudent.std.project.id + "&_method=delete"][/@]
   [#assign title]
      <i class="fas fa-school"></i> &nbsp;${externStudent.school.name}<span style="font-size:0.8em">(${externStudent.beginOn?string("yyyy-MM")}~${externStudent.endOn?string("yyyy-MM")})</span>
   [#if applies.get(externStudent)??]
@@ -29,10 +29,10 @@
      [@b.a href="!editExternStudent?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>修改[/@]
      [@b.a href="!editApplies?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>匹配冲抵[/@]
      </div>
-       [@b.a href="!remove?apply.id="+apply.id + "&project.id=" + apply.externStudent.std.project.id  onclick="return removeExtern('${externStudent.id}');" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
+       [@b.a href="!remove?apply.id="+apply.id + "&project.id=" + apply.externStudent.std.project.id  onclick="return removeExtern(this);" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除申请[/@]
      [/#if]
   [#else]
-     [@b.a href="!remove?externStudent.id="+externStudent.id + "&project.id=" + externStudent.std.project.id  onclick="return removeExtern('${externStudent.id}');" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除[/@]
+     [@b.a href="!remove?externStudent.id="+externStudent.id + "&project.id=" + externStudent.std.project.id  onclick="return removeExtern(this);" class="btn btn-sm btn-warning"]<i class="fas fa-times"></i>删除学习经历[/@]
      [@b.a href="!editGrades?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>开始申请[/@]
   [/#if]
   [/#assign]
@@ -45,9 +45,9 @@
   [/#list]
 </div>
 <script>
-   function removeExtern(id){
+   function removeExtern(elem){
        if(confirm("确定删除?")){
-         return bg.form.submit(document.getElementById("removeExternForm_"+id));
+         return bg.Go(elem,null)
        }else{
          return false;
        }
