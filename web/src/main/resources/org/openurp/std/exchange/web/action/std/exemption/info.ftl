@@ -21,8 +21,8 @@
       <td class="title">累计学分：</td>
       <td>${apply.credits}分,冲抵${apply.exemptionCredits}分</td>
       <td class="title">成绩材料：</td>
-      <td>[#if transcriptPaths.get(externStudent)??]
-         <a href="${transcriptPaths.get(externStudent)}" target="_blank"><i class="fa fa-paperclip"></i>下载附件</a>
+      <td>[#if transcriptPaths.get(apply)??]
+         <a href="${transcriptPaths.get(apply)}" target="_blank"><i class="fa fa-paperclip"></i>下载附件</a>
          [#else]--[/#if]
       </td>
       <td class="title">审核状态：</td>
