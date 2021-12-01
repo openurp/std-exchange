@@ -1,21 +1,20 @@
 /*
- * OpenURP, Agile University Resource Planning Solution.
- *
- * Copyright © 2014, The OpenURP Software.
+ * Copyright (C) 2005, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful.
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.openurp.std.exchange.web.action.std
 
 import jakarta.servlet.http.Part
@@ -23,9 +22,9 @@ import org.beangle.commons.collection.Collections
 import org.beangle.commons.lang.Strings
 import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.EmsApp
-import org.beangle.webmvc.api.annotation.mapping
-import org.beangle.webmvc.api.view.View
-import org.beangle.webmvc.entity.action.RestfulAction
+import org.beangle.web.action.annotation.mapping
+import org.beangle.web.action.view.View
+import org.beangle.webmvc.support.action.RestfulAction
 import org.openurp.base.edu.AuditStates
 import org.openurp.base.edu.code.model.CourseType
 import org.openurp.base.edu.model.{Course, ExternStudent, Student}
@@ -121,7 +120,20 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val externStudent = populateEntity(classOf[ExternStudent], "externStudent")
     externStudent.std = std
     externStudent.updatedAt = Instant.now
-    externStudent.school=school
+    externStudent.school = school
+
+    val q = OqlBuilder.from(classOf[ExternStudent], "es");
+    q.where("es.std=:std", std)
+    q.where("es.school=:school", school)
+    val exists = entityDao.search(q)
+
+    if (exists.nonEmpty) {
+      val apply = getApply(exists.head)
+      if (null != apply) {
+        return redirect("index", "已经存在同样的申请了")
+      }
+    }
+
     entityDao.saveOrUpdate(externStudent)
     redirect("editGrades", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
@@ -242,7 +254,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     if (apply.auditState == AuditStates.Submited) {
       redirect("index", "info.save.success")
     } else {
-      redirect("editApplies", "&externStudent.id=" + apply.id, "超出认定学分上限，请重新选择课程")
+      redirect("editApplies", "&externStudent.id=" + apply.externStudent.id, "超出认定学分上限，请重新选择课程")
     }
   }
 
@@ -315,7 +327,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
 
   private def getApply(externStudent: ExternStudent): ExemptionApply = {
     val applyQuery = OqlBuilder.from(classOf[ExemptionApply], "apply")
-    applyQuery.where("apply.externStudent  =:es", externStudent)
+    applyQuery.where("apply.externStudent =:es", externStudent)
     val applies = entityDao.search(applyQuery)
     val apply = applies.headOption.getOrElse(new ExemptionApply)
     apply.externStudent = externStudent

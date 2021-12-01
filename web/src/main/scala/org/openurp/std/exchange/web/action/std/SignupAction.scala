@@ -1,21 +1,20 @@
 /*
- * OpenURP, Agile University Resource Planning Solution.
- *
- * Copyright © 2014, The OpenURP Software.
+ * Copyright (C) 2005, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful.
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.openurp.std.exchange.web.action.std
 
 import org.beangle.commons.activation.MediaTypes
@@ -23,8 +22,8 @@ import org.beangle.commons.codec.digest.Digests
 import org.beangle.commons.lang.Strings
 import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.Ems
-import org.beangle.webmvc.api.view.{Stream, View}
-import org.beangle.webmvc.entity.action.EntityAction
+import org.beangle.web.action.view.{Stream, View}
+import org.beangle.webmvc.support.action.EntityAction
 import org.openurp.base.edu.model.Student
 import org.openurp.base.model.{ExternSchool, Person}
 import org.openurp.code.person.model.{FamilyRelationship, Nation, PoliticalStatus}
@@ -206,7 +205,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
         val choice = apply.getChoice(idx).getOrElse(new ExchangeApplyChoice)
         choice.school = entityDao.get(classOf[ExternSchool], schoolId.get)
         choice.major = major.get
-        choice.apply = apply
+        choice.exchangeApply = apply
         choice.idx = idx
         if (!choice.persisted) apply.choices += choice
       }
