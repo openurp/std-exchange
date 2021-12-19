@@ -64,7 +64,7 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
     put("schools", entityDao.getAll(classOf[ExternSchool]))
     val project = getProject
     put("levels", project.levels)
-    put("categories",List(project.category))
+    put("categories", List(project.category))
     put("project", project)
     super.editSetting(entity)
   }
@@ -135,9 +135,13 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
       grades foreach { g =>
         g.auditState = apply.auditState
       }
+      val courses = grades.map(_.courses).flatten
+      val converted = exemptionService.getConvertedGrades(apply.externStudent.std, courses)
+      entityDao.remove(converted)
     }
     entityDao.saveOrUpdate(apply)
     entityDao.saveOrUpdate(grades)
+    exemptionService.recalcExemption(apply.externStudent.std)
     redirect("search", "info.save.success")
   }
 

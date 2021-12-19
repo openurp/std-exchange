@@ -298,6 +298,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val courses = Collections.newSet[Course]
     val emptyCourseTypes = Collections.newSet[CourseType]
 
+
     coursePlanProvider.getCoursePlan(std) foreach { plan =>
       for (group <- plan.groups) {
         if (group.planCourses.isEmpty && group.children.isEmpty) {
@@ -305,6 +306,9 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
         } else {
           for (planCourse <- group.planCourses) {
             courses.addOne(planCourse.course)
+          }
+          if (!group.autoAddup) {
+            emptyCourseTypes += group.courseType
           }
         }
       }
@@ -328,6 +332,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
   private def getApply(externStudent: ExternStudent): ExemptionApply = {
     val applyQuery = OqlBuilder.from(classOf[ExemptionApply], "apply")
     applyQuery.where("apply.externStudent =:es", externStudent)
+    applyQuery.orderBy("apply.updatedAt desc")
     val applies = entityDao.search(applyQuery)
     val apply = applies.headOption.getOrElse(new ExemptionApply)
     apply.externStudent = externStudent
