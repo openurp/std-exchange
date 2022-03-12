@@ -11,7 +11,7 @@
          </div>
          [/#if]
          [@b.a onclick="return audit('${apply.id}',0)" class="btn btn-sm btn-warning"]<i class="fa fa-undo"></i>退回修改[/@]
-         [#if apply.auditState=="通过"]<span style="font-size:0.8em;color:red">如果通过后退回修改，需要手工处理成绩已经生成的成绩。</span>[/#if]
+         [#if apply.auditState=="通过"]<span style="font-size:0.8em;color:red">如果通过后退回修改，将会级联删除已经生成的成绩。</span>[/#if]
    [/@]
 [#assign std= apply.externStudent.std/]
 <table class="infoTable">

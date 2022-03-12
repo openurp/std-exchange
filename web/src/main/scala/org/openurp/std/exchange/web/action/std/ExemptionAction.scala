@@ -34,6 +34,7 @@ import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.starter.edu.helper.ProjectSupport
 import org.openurp.std.exchange.model.{ExchangeGrade, ExemptionApply, ExemptionCredit}
 
+import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate}
 
 class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport {
@@ -117,14 +118,15 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
         }
     }
 
-    val externStudent = populateEntity(classOf[ExternStudent], "externStudent")
-    externStudent.std = std
-    externStudent.updatedAt = Instant.now
-    externStudent.school = school
+    val rs = populateEntity(classOf[ExternStudent], "externStudent")
+    rs.std = std
+    rs.updatedAt = Instant.now
+    rs.school = school
 
     val q = OqlBuilder.from(classOf[ExternStudent], "es");
     q.where("es.std=:std", std)
     q.where("es.school=:school", school)
+    q.where("to_char(es.beginOn,'yyyyMM')=:beginOn", rs.beginOn.format(DateTimeFormatter.ofPattern("yyyyMM")))
     val exists = entityDao.search(q)
 
     if (exists.nonEmpty) {
@@ -133,9 +135,8 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
         return redirect("index", "已经存在同样的申请了")
       }
     }
-
-    entityDao.saveOrUpdate(externStudent)
-    redirect("editGrades", "&externStudent.id=" + externStudent.id, "info.save.success")
+    entityDao.saveOrUpdate(rs)
+    redirect("editGrades", "&externStudent.id=" + rs.id, "info.save.success")
   }
 
   /** 第二步 编辑成绩，保存附件
@@ -265,12 +266,12 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val applyId = getLong("apply.id")
     applyId match {
       case Some(id) =>
-        val es = entityDao.get(classOf[ExemptionApply], id)
-        if (es.externStudent.std == std && es.auditState != AuditStates.Accepted) {
-          es.transcriptPath foreach { p =>
+        val ea = entityDao.get(classOf[ExemptionApply], id)
+        if (ea.externStudent.std == std && ea.auditState != AuditStates.Accepted) {
+          ea.transcriptPath foreach { p =>
             EmsApp.getBlobRepository(true).remove(p)
           }
-          entityDao.remove(es)
+          entityDao.remove(ea)
           redirect("index", "info.remove.success")
         } else {
           redirect("index", "删除失败")
@@ -330,10 +331,9 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
   }
 
   private def getApply(externStudent: ExternStudent): ExemptionApply = {
-    val applyQuery = OqlBuilder.from(classOf[ExemptionApply], "apply")
-    applyQuery.where("apply.externStudent =:es", externStudent)
-    applyQuery.orderBy("apply.updatedAt desc")
-    val applies = entityDao.search(applyQuery)
+    val q = OqlBuilder.from(classOf[ExemptionApply], "apply")
+    q.where("apply.externStudent =:es", externStudent)
+    val applies = entityDao.search(q)
     val apply = applies.headOption.getOrElse(new ExemptionApply)
     apply.externStudent = externStudent
     apply
