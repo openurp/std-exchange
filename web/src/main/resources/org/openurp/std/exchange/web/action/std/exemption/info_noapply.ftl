@@ -19,7 +19,7 @@
     </tr>
     <tr>
       <td class="title">累计学分：</td>
-      <td>${apply.credits}分,冲抵${apply.exemptionCredits}分</td>
+      <td>0分,未申请冲抵</td>
       <td class="title">成绩材料：</td>
       <td>--</td>
       <td class="title">审核状态：</td>

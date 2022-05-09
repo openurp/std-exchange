@@ -1,0 +1,20 @@
+[#ftl]
+[@b.head/]
+[@b.grid items=exchangeSchemes var="exchangeScheme"]
+  [@b.gridbar]
+    bar.addItem("${b.text("action.new")}",action.add());
+    bar.addItem("${b.text("action.modify")}",action.edit());
+    bar.addItem("${b.text("action.delete")}",action.remove("确认删除?"));
+  [/@]
+  [@b.row]
+    [@b.boxcol /]
+    [@b.col width="15%" property="name" title="名称"/]
+    [@b.col width="10%" property="grades" title="年级"/]
+    [@b.col width="8%" property="minGpa" title="最低绩点"/]
+    [@b.col width="8%" property="choiceCount" title="志愿数"/]
+    [@b.col width="24%" property="beginAt" title="开始时间"]${(exchangeScheme.beginAt?string("yyyy-MM-dd HH:mm"))!}~${(exchangeScheme.endAt?string("yyyy-MM-dd HH:mm"))!}[/@]
+    [@b.col width="35%" title="可选学校列表"][#list exchangeScheme.schools?sort_by("name") as school]${school.name!}[#if school_has_next]&nbsp;[/#if][/#list][/@]
+  [/@]
+[/@]
+[@b.form name="exchangeSchemeForm" action=""/]
+[@b.foot/]

@@ -1,30 +1,30 @@
 /*
- * OpenURP, Agile University Resource Planning Solution.
- *
- * Copyright © 2014, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful.
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.openurp.std.exchange.web.action.exemption
 
 import org.beangle.commons.collection.{Collections, Properties}
 import org.beangle.data.dao.OqlBuilder
 import org.beangle.data.transfer.exporter.ExportSetting
-import org.beangle.webmvc.api.annotation.response
-import org.beangle.webmvc.api.view.{PathView, View}
-import org.beangle.webmvc.entity.action.RestfulAction
-import org.openurp.base.edu.model.{ExternStudent, Semester}
+import org.beangle.web.action.annotation.response
+import org.beangle.web.action.view.{PathView, View}
+import org.beangle.webmvc.support.action.RestfulAction
+import org.openurp.base.model.Semester
+import org.openurp.base.std.model.ExternStudent
 import org.openurp.code.edu.model.{CourseTakeType, GradingMode}
 import org.openurp.edu.grade.course.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
@@ -41,20 +41,6 @@ class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
 
   var coursePlanProvider: CoursePlanProvider = _
   var exemptionService: ExemptionService = _
-
-  override protected def getQueryBuilder: OqlBuilder[ExchangeGrade] = {
-    val builder = super.getQueryBuilder
-    getDate("fromAt") foreach { fromAt =>
-      builder.where("exchangeGrade.updatedAt >= :fromAt", fromAt.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
-    }
-    getDate("toAt") foreach { toAt =>
-      builder.where(" exchangeGrade.updatedAt <= :toAt", toAt.plusDays(1).atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
-    }
-    getBoolean("hasCourse") foreach { hasCourse =>
-      builder.where((if (hasCourse) "" else "not ") + "exists (from exchangeGrade.courses ec)")
-    }
-    builder
-  }
 
   @response
   def loadStudent: Seq[Properties] = {
@@ -120,5 +106,19 @@ class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
   override def configExport(setting: ExportSetting): Unit = {
     super.configExport(setting)
     setting.context.extractor = new ExchangeGradePropertyExtractor
+  }
+
+  override protected def getQueryBuilder: OqlBuilder[ExchangeGrade] = {
+    val builder = super.getQueryBuilder
+    getDate("fromAt") foreach { fromAt =>
+      builder.where("exchangeGrade.updatedAt >= :fromAt", fromAt.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
+    }
+    getDate("toAt") foreach { toAt =>
+      builder.where(" exchangeGrade.updatedAt <= :toAt", toAt.plusDays(1).atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
+    }
+    getBoolean("hasCourse") foreach { hasCourse =>
+      builder.where((if (hasCourse) "" else "not ") + "exists (from exchangeGrade.courses ec)")
+    }
+    builder
   }
 }

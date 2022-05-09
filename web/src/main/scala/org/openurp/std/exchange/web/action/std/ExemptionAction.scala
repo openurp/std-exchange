@@ -1,21 +1,20 @@
 /*
- * OpenURP, Agile University Resource Planning Solution.
- *
- * Copyright © 2014, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful.
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.openurp.std.exchange.web.action.std
 
 import jakarta.servlet.http.Part
@@ -23,18 +22,20 @@ import org.beangle.commons.collection.Collections
 import org.beangle.commons.lang.Strings
 import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.EmsApp
-import org.beangle.webmvc.api.annotation.mapping
-import org.beangle.webmvc.api.view.View
-import org.beangle.webmvc.entity.action.RestfulAction
-import org.openurp.base.edu.AuditStates
+import org.beangle.web.action.annotation.mapping
+import org.beangle.web.action.view.View
+import org.beangle.webmvc.support.action.RestfulAction
+import org.openurp.base.model.AuditStatus
 import org.openurp.base.edu.code.model.CourseType
-import org.openurp.base.edu.model.{Course, ExternStudent, Student}
+import org.openurp.base.edu.model.Course
 import org.openurp.base.model.ExternSchool
+import org.openurp.base.std.model.{ExternStudent, Student}
 import org.openurp.edu.grade.course.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.starter.edu.helper.ProjectSupport
 import org.openurp.std.exchange.model.{ExchangeGrade, ExemptionApply, ExemptionCredit}
 
+import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate}
 
 class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport {
@@ -113,15 +114,30 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
             school.updatedAt = Instant.now
             school.code = "user_add_" + System.currentTimeMillis()
             entityDao.saveOrUpdate(school)
+
           }
         }
     }
 
-    val externStudent = populateEntity(classOf[ExternStudent], "externStudent")
-    externStudent.std = std
-    externStudent.updatedAt = Instant.now
-    entityDao.saveOrUpdate(externStudent)
-    redirect("editGrades", "&externStudent.id=" + externStudent.id, "info.save.success")
+    val rs = populateEntity(classOf[ExternStudent], "externStudent")
+    rs.std = std
+    rs.updatedAt = Instant.now
+    rs.school = school
+
+    val q = OqlBuilder.from(classOf[ExternStudent], "es");
+    q.where("es.std=:std", std)
+    q.where("es.school=:school", school)
+    q.where("to_char(es.beginOn,'yyyyMM')=:beginOn", rs.beginOn.format(DateTimeFormatter.ofPattern("yyyyMM")))
+    val exists = entityDao.search(q)
+
+    if (exists.nonEmpty) {
+      val apply = getApply(exists.head)
+      if (null != apply && apply.status == AuditStatus.Passed) {
+        return redirect("index", "已经存在同样的申请了")
+      }
+    }
+    entityDao.saveOrUpdate(rs)
+    redirect("editGrades", "&externStudent.id=" + rs.id, "info.save.success")
   }
 
   /** 第二步 编辑成绩，保存附件
@@ -182,6 +198,14 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
+  private def getApply(externStudent: ExternStudent): ExemptionApply = {
+    val q = OqlBuilder.from(classOf[ExemptionApply], "apply")
+    q.where("apply.externStudent =:es", externStudent)
+    val applies = entityDao.search(q)
+    val apply = applies.headOption.getOrElse(new ExemptionApply)
+    apply.externStudent = externStudent
+    apply
+  }
 
   /** 第三步编辑免修关系
    *
@@ -200,8 +224,43 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
       .where("eg.externStudent  =:es", externStudent)
     val grades = entityDao.search(gradeQuery)
     put("grades", grades)
-    put("planCourses", getPlanCourses(apply.externStudent.std))
+    put("planCourses", getPlanCourses(externStudent.std))
     forward()
+  }
+
+  private def getPlanCourses(std: Student): collection.Seq[Course] = {
+    val courses = Collections.newSet[Course]
+    val emptyCourseTypes = Collections.newSet[CourseType]
+
+
+    coursePlanProvider.getCoursePlan(std) foreach { plan =>
+      for (group <- plan.groups) {
+        if (group.planCourses.isEmpty && group.children.isEmpty) {
+          emptyCourseTypes += group.courseType
+        } else {
+          for (planCourse <- group.planCourses) {
+            courses.addOne(planCourse.course)
+          }
+          if (!group.autoAddup) {
+            emptyCourseTypes += group.courseType
+          }
+        }
+      }
+    }
+
+    if (emptyCourseTypes.nonEmpty) {
+      val typeQuery = OqlBuilder.from(classOf[CourseType], "ct").where("ct.parent in(:parents)", emptyCourseTypes)
+      emptyCourseTypes ++= entityDao.search(typeQuery)
+      courses.addAll(entityDao.findBy(classOf[Course], "courseType", emptyCourseTypes))
+    }
+
+    val query = OqlBuilder.from[Course](classOf[CourseGrade].getName, "cg")
+    query.where("cg.std=:std and cg.passed=true", std)
+    query.select("cg.course")
+    val hasGrade = entityDao.search(query)
+
+    courses.subtractAll(hasGrade)
+    courses.toBuffer
   }
 
   /** 保存第三步
@@ -211,7 +270,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
   def saveApplies(): View = {
     val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
     val apply = getApply(externStudent)
-    if (apply.auditState == AuditStates.Accepted) {
+    if (apply.status == AuditStatus.Passed) {
       return redirect("index", "已经审核通过的申请不能再次冲抵")
     }
     val courseSet = Collections.newSet[Course]
@@ -228,23 +287,22 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     entityDao.saveOrUpdate(apply)
     val limit = entityDao.findBy(classOf[ExemptionCredit], "std", List(std)).headOption
     limit match {
-      case None => apply.auditState = AuditStates.Submited
+      case None => apply.status = AuditStatus.Submited
       case Some(l) =>
         val totalCredits = entityDao.findBy(classOf[ExemptionApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
         if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
-          apply.auditState = AuditStates.Submited
+          apply.status = AuditStatus.Submited
         } else {
-          apply.auditState = AuditStates.Draft
+          apply.status = AuditStatus.Draft
         }
     }
     entityDao.saveOrUpdate(apply)
-    if (apply.auditState == AuditStates.Submited) {
+    if (apply.status == AuditStatus.Submited) {
       redirect("index", "info.save.success")
     } else {
-      redirect("editApplies", "&externStudent.id=" + apply.id, "超出认定学分上限，请重新选择课程")
+      redirect("editApplies", "&externStudent.id=" + apply.externStudent.id, "超出认定学分上限，请重新选择课程")
     }
   }
-
 
   @mapping(method = "delete")
   override def remove(): View = {
@@ -253,12 +311,12 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val applyId = getLong("apply.id")
     applyId match {
       case Some(id) =>
-        val es = entityDao.get(classOf[ExemptionApply], id)
-        if (es.externStudent.std == std && es.auditState != AuditStates.Accepted) {
-          es.transcriptPath foreach { p =>
+        val ea = entityDao.get(classOf[ExemptionApply], id)
+        if (ea.externStudent.std == std && ea.status != AuditStatus.Passed) {
+          ea.transcriptPath foreach { p =>
             EmsApp.getBlobRepository(true).remove(p)
           }
-          entityDao.remove(es)
+          entityDao.remove(ea)
           redirect("index", "info.remove.success")
         } else {
           redirect("index", "删除失败")
@@ -280,42 +338,5 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
           case None => redirect("index", "缺少参数")
         }
     }
-  }
-
-  private def getPlanCourses(std: Student): collection.Seq[Course] = {
-    val courses = Collections.newSet[Course]
-    val emptyCourseTypes = Collections.newSet[CourseType]
-    coursePlanProvider.getCoursePlan(std) foreach { plan =>
-      for (group <- plan.groups) {
-        if (group.planCourses.isEmpty && group.children.isEmpty) {
-          emptyCourseTypes += group.courseType
-        } else {
-          for (planCourse <- group.planCourses) {
-            courses.addOne(planCourse.course)
-          }
-        }
-      }
-    }
-
-    if (emptyCourseTypes.nonEmpty) {
-      val typeQuery = OqlBuilder.from(classOf[CourseType], "ct").where("ct.parent in(:parents)", emptyCourseTypes)
-      emptyCourseTypes ++= entityDao.search(typeQuery)
-      courses.addAll(entityDao.findBy(classOf[Course], "courseType", emptyCourseTypes))
-    }
-
-    val query = OqlBuilder.from[Course](classOf[CourseGrade].getName, "cg")
-    query.where("cg.std=:std and cg.passed=true", std)
-    query.select("cg.course")
-    courses.subtractAll(entityDao.search(query))
-    courses.toBuffer
-  }
-
-  private def getApply(externStudent: ExternStudent): ExemptionApply = {
-    val applyQuery = OqlBuilder.from(classOf[ExemptionApply], "apply")
-    applyQuery.where("apply.externStudent  =:es", externStudent)
-    val applies = entityDao.search(applyQuery)
-    val apply = applies.headOption.getOrElse(new ExemptionApply)
-    apply.externStudent = externStudent
-    apply
   }
 }

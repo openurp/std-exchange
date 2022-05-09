@@ -11,6 +11,7 @@
          </div>
          [/#if]
          [@b.a onclick="return audit('${apply.id}',0)" class="btn btn-sm btn-warning"]<i class="fa fa-undo"></i>退回修改[/@]
+         [#if apply.auditState=="通过"]<span style="font-size:0.8em;color:red">如果通过后退回修改，将会级联删除已经生成的成绩。</span>[/#if]
    [/@]
 [#assign std= apply.externStudent.std/]
 <table class="infoTable">
@@ -61,15 +62,22 @@
   [@b.form name="applyForm" action="!audit"]
     <input name="passed" value="" type="hidden"/>
     <input name="id" value="" type="hidden"/>
+    <input name="auditOpinion" value="" type="hidden"/>
   [/@]
 <script>
    function audit(id,passed){
+       var form=document.applyForm;
        var msg="确定审核通过?"
        if(passed=="0"){
+          var auditOpinion = prompt("请写明驳回原因：")
+          if(auditOpinion){
+             form['auditOpinion'].value=auditOpinion;
+          }else{
+            return false;
+          }
           msg="确定审核不通过?"
        }
        if(confirm(msg)){
-         var form=document.applyForm;
          form['id'].value=id;
          form['passed'].value=passed;
          bg.form.submit(form);

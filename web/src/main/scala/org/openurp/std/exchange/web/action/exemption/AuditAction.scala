@@ -1,32 +1,33 @@
 /*
- * OpenURP, Agile University Resource Planning Solution.
- *
- * Copyright © 2014, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
+ * it under the terms of the GNU Lesser General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful.
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 package org.openurp.std.exchange.web.action.exemption
 
 import org.beangle.commons.collection.{Collections, Properties}
 import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.EmsApp
-import org.beangle.webmvc.api.annotation.response
-import org.beangle.webmvc.api.view.View
-import org.beangle.webmvc.entity.action.RestfulAction
-import org.openurp.base.edu.AuditStates
+import org.beangle.web.action.annotation.response
+import org.beangle.web.action.view.View
+import org.beangle.webmvc.support.action.RestfulAction
+import org.openurp.base.model.AuditStatus
 import org.openurp.base.edu.code.model.CourseType
-import org.openurp.base.edu.model.{Course, Semester, Student}
+import org.openurp.base.edu.model.{Course }
+import org.openurp.base.std.model.{  Student}
+import org.openurp.base.model.{ Semester }
 import org.openurp.base.model.ExternSchool
 import org.openurp.code.edu.model.GradingMode
 import org.openurp.code.std.model.StudentStatus
@@ -46,7 +47,6 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   override def indexSetting(): Unit = {
     put("studentStatuses", getCodes(classOf[StudentStatus]))
-    put("auditStates", AuditStates.values)
   }
 
   override def info(id: String): View = {
@@ -65,7 +65,7 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
     put("schools", entityDao.getAll(classOf[ExternSchool]))
     val project = getProject
     put("levels", project.levels)
-    put("categories",List(project.category))
+    put("categories", List(project.category))
     put("project", project)
     super.editSetting(entity)
   }
@@ -84,7 +84,7 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   private def getSemester(date: LocalDate): Semester = {
     val builder = OqlBuilder.from(classOf[Semester], "semester")
-      .where("semester.calendar in(:calendars)", getProject.calendars)
+      .where("semester.calendar =:calendar", getProject.calendar)
     builder.where("semester.endOn > :date", date)
     builder.orderBy("semester.beginOn")
     builder.limit(1, 1)
@@ -105,13 +105,15 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   def audit(): View = {
     val esId = longId("apply")
+    val auditOpinion = get("auditOpinion")
     val apply = entityDao.get(classOf[ExemptionApply], esId)
     val passed = getBoolean("passed", false)
     val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
       .where("eg.externStudent=:es", apply.externStudent)
     val grades = entityDao.search(gradeQuery)
+    apply.auditOpinion = auditOpinion
     if (passed) {
-      apply.auditState = AuditStates.Finalized
+      apply.status = AuditStatus.Passed
       val courseTypes = buildCourseTypes(apply.externStudent.std)
       val allCourses = Collections.newSet[Course]
       grades foreach { eg =>
@@ -130,13 +132,17 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
         }
       }
     } else {
-      apply.auditState = AuditStates.Rejected
+      apply.status = AuditStatus.Rejected
       grades foreach { g =>
-        g.auditState = apply.auditState
+        g.status = apply.status
       }
+      val courses = grades.map(_.courses).flatten
+      val converted = exemptionService.getConvertedGrades(apply.externStudent.std, courses)
+      entityDao.remove(converted)
     }
     entityDao.saveOrUpdate(apply)
     entityDao.saveOrUpdate(grades)
+    exemptionService.recalcExemption(apply.externStudent.std)
     redirect("search", "info.save.success")
   }
 
