@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -20,7 +20,7 @@ package org.openurp.std.exchange.app.model
 import org.beangle.commons.collection.Collections
 import org.beangle.data.model.LongId
 import org.beangle.data.model.pojo.Updated
-import org.openurp.base.edu.model.Student
+import org.openurp.base.std.model.Student
 import org.openurp.std.exchange.model.ExchangeProgram
 
 import scala.collection.mutable
@@ -55,15 +55,15 @@ class ExchangeApply extends LongId with Updated {
   /** 陈述 */
   var statements: String = _
 
-  def getChoice(idx: Int): Option[ExchangeApplyChoice] = {
-    choices.find(_.idx == idx)
-  }
-
   def choice1: String = {
     getChoice(1) match {
       case Some(c) => c.school.name + " " + c.major
       case None => ""
     }
+  }
+
+  def getChoice(idx: Int): Option[ExchangeApplyChoice] = {
+    choices.find(_.idx == idx)
   }
 
   def choice2: String = {

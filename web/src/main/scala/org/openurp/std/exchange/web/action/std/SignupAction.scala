@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -24,8 +24,8 @@ import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.Ems
 import org.beangle.web.action.view.{Stream, View}
 import org.beangle.webmvc.support.action.EntityAction
-import org.openurp.base.edu.model.Student
 import org.openurp.base.model.{ExternSchool, Person}
+import org.openurp.base.std.model.Student
 import org.openurp.code.person.model.{FamilyRelationship, Nation, PoliticalStatus}
 import org.openurp.edu.grade.course.model.StdGpa
 import org.openurp.starter.edu.helper.ProjectSupport
@@ -65,7 +65,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
 
     put("schemes", avaliableSchemes)
     put("std", std)
-    put("stdGpa",getStdGpa(std))
+    put("stdGpa", getStdGpa(std))
     put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(std.user.code))
     put("avatar_upload_url", Ems.base + "/portal/user/avatar")
     if (applies.nonEmpty) {
@@ -183,9 +183,26 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     apply.gpa = stdGpa.gpa
     apply.credits = stdGpa.credits
 
-    put("stdGpa",stdGpa)
+    put("stdGpa", stdGpa)
     put("apply", apply)
     forward()
+  }
+
+  /** 查询Gpa
+   *
+   * @return
+   */
+  private def getStdGpa(std: Student): StdGpa = {
+    val stdGpas = entityDao.findBy(classOf[StdGpa], "std", List(std))
+    stdGpas.headOption.getOrElse(new StdGpa)
+  }
+
+  private def getApply(std: Student, scheme: ExchangeScheme): ExchangeApply = {
+    val applyQuery = OqlBuilder.from(classOf[ExchangeApply], "apply")
+    applyQuery.where("apply.std  =:std", std)
+    applyQuery.where("apply.scheme=:scheme", scheme)
+    val applies = entityDao.search(applyQuery)
+    applies.headOption.getOrElse(new ExchangeApply)
   }
 
   def saveApply(): View = {
@@ -216,7 +233,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     apply.email = std.user.email.get
     apply.mobile = std.user.mobile.get
     apply.address = contact.address.get
-    val stdGpa= getStdGpa(std)
+    val stdGpa = getStdGpa(std)
     apply.gpa = stdGpa.gpa
     apply.credits = stdGpa.credits
 
@@ -243,22 +260,5 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     val bytes = DocHelper.toDoc(apply, entityDao)
     val contentType = MediaTypes.get("docx", MediaTypes.ApplicationOctetStream).toString
     Stream(new ByteArrayInputStream(bytes), contentType, std.user.code + "_" + std.user.name + "_" + apply.scheme.program.name + "_申请表.docx")
-  }
-
-  /** 查询Gpa
-   *
-   * @return
-   */
-  private def getStdGpa(std: Student): StdGpa = {
-    val stdGpas = entityDao.findBy(classOf[StdGpa], "std", List(std))
-    stdGpas.headOption.getOrElse(new StdGpa)
-  }
-
-  private def getApply(std: Student, scheme: ExchangeScheme): ExchangeApply = {
-    val applyQuery = OqlBuilder.from(classOf[ExchangeApply], "apply")
-    applyQuery.where("apply.std  =:std", std)
-    applyQuery.where("apply.scheme=:scheme", scheme)
-    val applies = entityDao.search(applyQuery)
-    applies.headOption.getOrElse(new ExchangeApply)
   }
 }

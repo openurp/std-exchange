@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -19,9 +19,11 @@ package org.openurp.std.exchange.service.impl
 
 import org.beangle.commons.collection.Collections
 import org.beangle.data.dao.{EntityDao, OqlBuilder}
-import org.openurp.base.edu.AuditStates
-import org.openurp.base.edu.model.{Course, Semester, Student}
-import org.openurp.base.edu.service.SemesterService
+import org.openurp.base.model.AuditStatus
+import org.openurp.base.edu.model.Course
+import org.openurp.base.model.Semester
+import org.openurp.base.service.SemesterService
+import org.openurp.base.std.model.Student
 import org.openurp.code.edu.model.CourseTakeType
 import org.openurp.edu.grade.course.model.CourseGrade
 import org.openurp.edu.grade.model.Grade
@@ -79,26 +81,6 @@ class ExemptionServiceImpl extends ExemptionService {
     }
   }
 
-  override def recalcExemption(std: Student): Unit = {
-    //重新统计已经免修的学分
-    val ecBuilder = OqlBuilder.from(classOf[ExemptionCredit], "ec")
-    ecBuilder.where("ec.std=:std", std)
-    val ec = entityDao.search(ecBuilder).headOption match {
-      case Some(e) => e
-      case None =>
-        val e = new ExemptionCredit
-        e.std = std
-        e
-    }
-    val exemptedCourses = Collections.newSet[Course]
-    entityDao.findBy(classOf[ExchangeGrade], "externStudent.std", List(std)).filter(_.auditState == AuditStates.Finalized) foreach { eg =>
-      exemptedCourses ++= eg.courses
-    }
-    ec.exempted = exemptedCourses.toList.map(_.credits).sum
-    ec.updatedAt = Instant.now
-    entityDao.saveOrUpdate(ec)
-  }
-
   override def removeExemption(eg: ExchangeGrade, course: Course): Unit = {
     eg.courses.subtractOne(course)
     entityDao.saveOrUpdate(eg)
@@ -117,25 +99,45 @@ class ExemptionServiceImpl extends ExemptionService {
     }
   }
 
-  private def getExemptionGrades(std: Student, course: Course): Iterable[CourseGrade] = {
-    val cgQuery = OqlBuilder.from(classOf[CourseGrade], "cg")
-    cgQuery.where("cg.std=:std and cg.course=:course", std, course)
-    cgQuery.where("cg.courseTakeType.id=:exemption", CourseTakeType.Exemption)
-    entityDao.search(cgQuery)
-  }
-
   override def addExemption(eg: ExchangeGrade, ecs: Seq[ExemptionCourse]): Unit = {
     val remark = eg.externStudent.school.name + " " + eg.courseName + " " + eg.scoreText
     val std = eg.externStudent.std
     addExemption(std, ecs, remark)
     val emptyCourses = eg.courses filter (x => getExemptionGrades(std, x).isEmpty)
     eg.courses.subtractAll(emptyCourses)
-    eg.auditState = AuditStates.Finalized
+    eg.status = AuditStatus.Passed
     ecs foreach { ec =>
       eg.courses += ec.course
     }
     entityDao.saveOrUpdate(eg)
     recalcExemption(std)
+  }
+
+  override def recalcExemption(std: Student): Unit = {
+    //重新统计已经免修的学分
+    val ecBuilder = OqlBuilder.from(classOf[ExemptionCredit], "ec")
+    ecBuilder.where("ec.std=:std", std)
+    val ec = entityDao.search(ecBuilder).headOption match {
+      case Some(e) => e
+      case None =>
+        val e = new ExemptionCredit
+        e.std = std
+        e
+    }
+    val exemptedCourses = Collections.newSet[Course]
+    entityDao.findBy(classOf[ExchangeGrade], "externStudent.std", List(std)).filter(_.status == AuditStatus.Passed) foreach { eg =>
+      exemptedCourses ++= eg.courses
+    }
+    ec.exempted = exemptedCourses.toList.map(_.credits).sum
+    ec.updatedAt = Instant.now
+    entityDao.saveOrUpdate(ec)
+  }
+
+  private def getExemptionGrades(std: Student, course: Course): Iterable[CourseGrade] = {
+    val cgQuery = OqlBuilder.from(classOf[CourseGrade], "cg")
+    cgQuery.where("cg.std=:std and cg.course=:course", std, course)
+    cgQuery.where("cg.courseTakeType.id=:exemption", CourseTakeType.Exemption)
+    entityDao.search(cgQuery)
   }
 
   private def addExemption(std: Student, ecs: Seq[ExemptionCourse], remark: String): Unit = {

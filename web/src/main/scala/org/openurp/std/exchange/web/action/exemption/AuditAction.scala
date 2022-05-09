@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -23,9 +23,11 @@ import org.beangle.ems.app.EmsApp
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.edu.AuditStates
+import org.openurp.base.model.AuditStatus
 import org.openurp.base.edu.code.model.CourseType
-import org.openurp.base.edu.model.{Course, Semester, Student}
+import org.openurp.base.edu.model.{Course }
+import org.openurp.base.std.model.{  Student}
+import org.openurp.base.model.{ Semester }
 import org.openurp.base.model.ExternSchool
 import org.openurp.code.edu.model.GradingMode
 import org.openurp.code.std.model.StudentStatus
@@ -45,7 +47,6 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   override def indexSetting(): Unit = {
     put("studentStatuses", getCodes(classOf[StudentStatus]))
-    put("auditStates", AuditStates.values)
   }
 
   override def info(id: String): View = {
@@ -83,7 +84,7 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
 
   private def getSemester(date: LocalDate): Semester = {
     val builder = OqlBuilder.from(classOf[Semester], "semester")
-      .where("semester.calendar in(:calendars)", getProject.calendars)
+      .where("semester.calendar =:calendar", getProject.calendar)
     builder.where("semester.endOn > :date", date)
     builder.orderBy("semester.beginOn")
     builder.limit(1, 1)
@@ -112,7 +113,7 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
     val grades = entityDao.search(gradeQuery)
     apply.auditOpinion = auditOpinion
     if (passed) {
-      apply.auditState = AuditStates.Finalized
+      apply.status = AuditStatus.Passed
       val courseTypes = buildCourseTypes(apply.externStudent.std)
       val allCourses = Collections.newSet[Course]
       grades foreach { eg =>
@@ -131,9 +132,9 @@ class AuditAction extends RestfulAction[ExemptionApply] with ProjectSupport {
         }
       }
     } else {
-      apply.auditState = AuditStates.Rejected
+      apply.status = AuditStatus.Rejected
       grades foreach { g =>
-        g.auditState = apply.auditState
+        g.status = apply.status
       }
       val courses = grades.map(_.courses).flatten
       val converted = exemptionService.getConvertedGrades(apply.externStudent.std, courses)

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,20 +17,20 @@
 
 package org.openurp.std.exchange.web.action.exemption
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-import java.time.format.DateTimeFormatter
-
-import org.beangle.doc.excel.schema.ExcelSchema
 import org.beangle.commons.collection.Properties
 import org.beangle.data.dao.OqlBuilder
+import org.beangle.data.excel.schema.ExcelSchema
 import org.beangle.data.transfer.importer.ImportSetting
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.Stream
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.edu.model.Student
-import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
-import org.openurp.std.exchange.model.ExemptionCredit
+import org.openurp.base.std.model.Student
 import org.openurp.starter.edu.helper.ProjectSupport
+import org.openurp.std.exchange.model.ExemptionCredit
+import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
+
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
+import java.time.format.DateTimeFormatter
 
 class CreditAction extends RestfulAction[ExemptionCredit] with ProjectSupport {
 
@@ -38,7 +38,6 @@ class CreditAction extends RestfulAction[ExemptionCredit] with ProjectSupport {
   def loadStudent: Seq[Properties] = {
     val query = OqlBuilder.from(classOf[Student], "std")
     query.where("std.user.code=:code", get("q", ""))
-    val yyyyMM = DateTimeFormatter.ofPattern("yyyy-MM")
     entityDao.search(query).map { std =>
       val p = new Properties()
       p.put("id", std.id)

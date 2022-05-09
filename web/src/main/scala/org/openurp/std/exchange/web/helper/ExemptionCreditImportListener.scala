@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,12 +17,14 @@
 
 package org.openurp.std.exchange.web.helper
 
-import java.time.Instant
 import org.beangle.commons.lang.Numbers
 import org.beangle.data.dao.{EntityDao, OqlBuilder}
 import org.beangle.data.transfer.importer.{ImportListener, ImportResult}
-import org.openurp.base.edu.model.{Project, Student}
+import org.openurp.base.model.Project
+import org.openurp.base.std.model.Student
 import org.openurp.std.exchange.model.ExemptionCredit
+
+import java.time.Instant
 
 class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) extends ImportListener {
   override def onStart(tr: ImportResult): Unit = {}
@@ -60,7 +62,7 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
           ec
         }
       ec.maxValue = maxValue
-      ec.updatedAt= Instant.now
+      ec.updatedAt = Instant.now
       transfer.current = ec
     }
   }

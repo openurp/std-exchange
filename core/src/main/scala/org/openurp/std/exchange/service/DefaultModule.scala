@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -18,7 +18,7 @@
 package org.openurp.std.exchange.service
 
 import org.beangle.cdi.bind.BindModule
-import org.openurp.base.edu.service.impl.SemesterServiceImpl
+import org.openurp.base.service.impl.SemesterServiceImpl
 import org.openurp.edu.program.domain.{DefaultCoursePlanProvider, DefaultProgramProvider}
 import org.openurp.std.exchange.service.impl.ExemptionServiceImpl
 

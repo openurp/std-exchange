@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, The OpenURP Software.
+ * Copyright (C) 2014, The OpenURP Software.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -25,10 +25,11 @@ import org.beangle.ems.app.EmsApp
 import org.beangle.web.action.annotation.mapping
 import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.edu.AuditStates
+import org.openurp.base.model.AuditStatus
 import org.openurp.base.edu.code.model.CourseType
-import org.openurp.base.edu.model.{Course, ExternStudent, Student}
+import org.openurp.base.edu.model.Course
 import org.openurp.base.model.ExternSchool
+import org.openurp.base.std.model.{ExternStudent, Student}
 import org.openurp.edu.grade.course.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.starter.edu.helper.ProjectSupport
@@ -131,7 +132,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
 
     if (exists.nonEmpty) {
       val apply = getApply(exists.head)
-      if (null != apply) {
+      if (null != apply && apply.status == AuditStatus.Passed) {
         return redirect("index", "已经存在同样的申请了")
       }
     }
@@ -197,6 +198,15 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
+  private def getApply(externStudent: ExternStudent): ExemptionApply = {
+    val q = OqlBuilder.from(classOf[ExemptionApply], "apply")
+    q.where("apply.externStudent =:es", externStudent)
+    val applies = entityDao.search(q)
+    val apply = applies.headOption.getOrElse(new ExemptionApply)
+    apply.externStudent = externStudent
+    apply
+  }
+
   /** 第三步编辑免修关系
    *
    * @return
@@ -216,83 +226,6 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     put("grades", grades)
     put("planCourses", getPlanCourses(externStudent.std))
     forward()
-  }
-
-  /** 保存第三步
-   *
-   * @return
-   */
-  def saveApplies(): View = {
-    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
-    val apply = getApply(externStudent)
-    if (apply.auditState == AuditStates.Accepted) {
-      return redirect("index", "已经审核通过的申请不能再次冲抵")
-    }
-    val courseSet = Collections.newSet[Course]
-    val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
-    grades foreach { m =>
-      val courses = getAll(s"grade_${m.id}.courses") map (x => entityDao.get(classOf[Course], x.toString.toLong))
-      m.courses.clear()
-      courseSet.addAll(courses)
-      m.courses.addAll(courses)
-    }
-    apply.updatedAt = Instant.now
-    val std = apply.externStudent.std
-    apply.exemptionCredits = courseSet.toSeq.map(_.credits).sum
-    entityDao.saveOrUpdate(apply)
-    val limit = entityDao.findBy(classOf[ExemptionCredit], "std", List(std)).headOption
-    limit match {
-      case None => apply.auditState = AuditStates.Submited
-      case Some(l) =>
-        val totalCredits = entityDao.findBy(classOf[ExemptionApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
-        if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
-          apply.auditState = AuditStates.Submited
-        } else {
-          apply.auditState = AuditStates.Draft
-        }
-    }
-    entityDao.saveOrUpdate(apply)
-    if (apply.auditState == AuditStates.Submited) {
-      redirect("index", "info.save.success")
-    } else {
-      redirect("editApplies", "&externStudent.id=" + apply.externStudent.id, "超出认定学分上限，请重新选择课程")
-    }
-  }
-
-  @mapping(method = "delete")
-  override def remove(): View = {
-    val std = getUser(classOf[Student])
-
-    val applyId = getLong("apply.id")
-    applyId match {
-      case Some(id) =>
-        val ea = entityDao.get(classOf[ExemptionApply], id)
-        if (ea.externStudent.std == std && ea.auditState != AuditStates.Accepted) {
-          ea.transcriptPath foreach { p =>
-            EmsApp.getBlobRepository(true).remove(p)
-          }
-          entityDao.remove(ea)
-          redirect("index", "info.remove.success")
-        } else {
-          redirect("index", "删除失败")
-        }
-      case None =>
-        val externStudentId = getLong("externStudent.id")
-        externStudentId match {
-          case Some(id) =>
-            val externStudent = entityDao.get(classOf[ExternStudent], id)
-            val apply = getApply(externStudent)
-            if (apply.persisted) {
-              redirect("index", "请先删除冲抵申请")
-            } else {
-              val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
-              entityDao.remove(grades)
-              entityDao.remove(externStudent)
-              redirect("index", "info.remove.success")
-            }
-          case None => redirect("index", "缺少参数")
-        }
-    }
   }
 
   private def getPlanCourses(std: Student): collection.Seq[Course] = {
@@ -330,12 +263,80 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     courses.toBuffer
   }
 
-  private def getApply(externStudent: ExternStudent): ExemptionApply = {
-    val q = OqlBuilder.from(classOf[ExemptionApply], "apply")
-    q.where("apply.externStudent =:es", externStudent)
-    val applies = entityDao.search(q)
-    val apply = applies.headOption.getOrElse(new ExemptionApply)
-    apply.externStudent = externStudent
-    apply
+  /** 保存第三步
+   *
+   * @return
+   */
+  def saveApplies(): View = {
+    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
+    val apply = getApply(externStudent)
+    if (apply.status == AuditStatus.Passed) {
+      return redirect("index", "已经审核通过的申请不能再次冲抵")
+    }
+    val courseSet = Collections.newSet[Course]
+    val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
+    grades foreach { m =>
+      val courses = getAll(s"grade_${m.id}.courses") map (x => entityDao.get(classOf[Course], x.toString.toLong))
+      m.courses.clear()
+      courseSet.addAll(courses)
+      m.courses.addAll(courses)
+    }
+    apply.updatedAt = Instant.now
+    val std = apply.externStudent.std
+    apply.exemptionCredits = courseSet.toSeq.map(_.credits).sum
+    entityDao.saveOrUpdate(apply)
+    val limit = entityDao.findBy(classOf[ExemptionCredit], "std", List(std)).headOption
+    limit match {
+      case None => apply.status = AuditStatus.Submited
+      case Some(l) =>
+        val totalCredits = entityDao.findBy(classOf[ExemptionApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
+        if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
+          apply.status = AuditStatus.Submited
+        } else {
+          apply.status = AuditStatus.Draft
+        }
+    }
+    entityDao.saveOrUpdate(apply)
+    if (apply.status == AuditStatus.Submited) {
+      redirect("index", "info.save.success")
+    } else {
+      redirect("editApplies", "&externStudent.id=" + apply.externStudent.id, "超出认定学分上限，请重新选择课程")
+    }
+  }
+
+  @mapping(method = "delete")
+  override def remove(): View = {
+    val std = getUser(classOf[Student])
+
+    val applyId = getLong("apply.id")
+    applyId match {
+      case Some(id) =>
+        val ea = entityDao.get(classOf[ExemptionApply], id)
+        if (ea.externStudent.std == std && ea.status != AuditStatus.Passed) {
+          ea.transcriptPath foreach { p =>
+            EmsApp.getBlobRepository(true).remove(p)
+          }
+          entityDao.remove(ea)
+          redirect("index", "info.remove.success")
+        } else {
+          redirect("index", "删除失败")
+        }
+      case None =>
+        val externStudentId = getLong("externStudent.id")
+        externStudentId match {
+          case Some(id) =>
+            val externStudent = entityDao.get(classOf[ExternStudent], id)
+            val apply = getApply(externStudent)
+            if (apply.persisted) {
+              redirect("index", "请先删除冲抵申请")
+            } else {
+              val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
+              entityDao.remove(grades)
+              entityDao.remove(externStudent)
+              redirect("index", "info.remove.success")
+            }
+          case None => redirect("index", "缺少参数")
+        }
+    }
   }
 }
