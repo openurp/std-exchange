@@ -24,7 +24,7 @@
      <i class="fas fa-school"></i> &nbsp;${externStudent.school.name}<span style="font-size:0.8em">(${externStudent.beginOn?string("yyyy-MM")}~${externStudent.endOn?string("yyyy-MM")})</span>
   [#if applies.get(externStudent)??]
      [#assign apply=applies.get(externStudent)/]
-     [#if apply.auditState =="通过"]审核通过[#else]
+     [#if apply.status =="通过"]审核通过[#else]
      <div class="btn-group">
      [@b.a href="!editExternStudent?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>修改[/@]
      [@b.a href="!editApplies?externStudent.id="+externStudent.id class="btn btn-sm btn-info"]<i class="far fa-edit"></i>匹配冲抵[/@]

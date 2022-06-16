@@ -5,13 +5,13 @@
 [@b.card class="card-info card-outline"]
   [@b.card_header]
          <i class="fas fa-school"></i>&nbsp;${apply.externStudent.school.name}<span style="font-size:0.8em">(${apply.externStudent.beginOn?string("yyyy-MM")}~${apply.externStudent.endOn?string("yyyy-MM")})</span>
-         [#if apply.auditState!="通过"]
+         [#if apply.status!="通过"]
          <div class="btn-group">
          [@b.a onclick="return audit('${apply.id}',1)" class="btn btn-sm btn-info"]<i class="fa fa-check"></i>审核通过[/@]
          </div>
          [/#if]
          [@b.a onclick="return audit('${apply.id}',0)" class="btn btn-sm btn-warning"]<i class="fa fa-undo"></i>退回修改[/@]
-         [#if apply.auditState=="通过"]<span style="font-size:0.8em;color:red">如果通过后退回修改，将会级联删除已经生成的成绩。</span>[/#if]
+         [#if apply.status=="通过"]<span style="font-size:0.8em;color:red">如果通过后退回修改，将会级联删除已经生成的成绩。</span>[/#if]
    [/@]
 [#assign std= apply.externStudent.std/]
 <table class="infoTable">
@@ -40,7 +40,7 @@
          [#else]--[/#if]
       </td>
       <td class="title">审核状态：</td>
-      <td><span class="[#if apply.auditState=="通过"]text-success[#else]text-danger[/#if]">${apply.auditState}${apply.auditOpinion!}</span></td>
+      <td><span class="[#if apply.status=="通过"]text-success[#else]text-danger[/#if]">${apply.status}${apply.auditOpinion!}</span></td>
     </tr>
   </table>
     [@b.grid items=grades sortable="false" var="grade" ]
