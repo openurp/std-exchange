@@ -5,7 +5,7 @@
   [/@]
   [@b.form name="exemptionCreditForm" action=b.rest.save(exemptionCredit) theme="list"]
     [#if (exemptionCredit.id)?exists]
-      [@b.field label="学号"]<span style="display: inline-block;">${(exemptionCredit.std.user.code)!} ${(exemptionCredit.std.user.name)!}[/@]
+      [@b.field label="学号"]<span style="display: inline-block;">${(exemptionCredit.std.code)!} ${(exemptionCredit.std.name)!}[/@]
     [#else]
       [@b.field label="学号"]
        <input name="stdCode"  placeholder="输入学号后，点击页面空白处，即可获取该学生信息">

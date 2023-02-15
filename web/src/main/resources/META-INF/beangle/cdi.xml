@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <cdi>
   <container>
-    <module class="org.openurp.starter.edu.action.ProjectModule" />
+    <module class="org.openurp.starter.web.ProjectModule" />
     <module class="org.openurp.std.exchange.web.action.std.DefaultModule" />
     <module class="org.openurp.std.exchange.web.action.depart.DefaultModule" />
     <module class="org.openurp.std.exchange.web.action.exemption.DefaultModule" />

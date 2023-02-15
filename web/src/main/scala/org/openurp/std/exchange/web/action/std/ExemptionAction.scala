@@ -24,28 +24,24 @@ import org.beangle.data.dao.OqlBuilder
 import org.beangle.ems.app.EmsApp
 import org.beangle.web.action.annotation.mapping
 import org.beangle.web.action.view.View
-import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.model.AuditStatus
-import org.openurp.base.edu.code.model.CourseType
+import org.beangle.webmvc.support.action.EntityAction
+import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
-import org.openurp.base.model.ExternSchool
+import org.openurp.base.model.{AuditStatus, ExternSchool}
 import org.openurp.base.std.model.{ExternStudent, Student}
-import org.openurp.edu.grade.course.model.CourseGrade
+import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
-import org.openurp.starter.edu.helper.ProjectSupport
-import org.openurp.std.exchange.model.{ExchangeGrade, ExemptionApply, ExemptionCredit}
+import org.openurp.starter.web.support.StudentSupport
+import org.openurp.std.exchange.model.{ExchangeExemptApply, ExchangeExemptCredit, ExchangeGrade}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate}
 
-class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport {
+class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApply] {
 
   var coursePlanProvider: CoursePlanProvider = _
 
-  override def index(): View = {
-    put("projects", getUserProjects(classOf[Student]))
-    val std = getUser(classOf[Student])
-
+  override def projectIndex(std: Student): View = {
     val query = OqlBuilder.from(classOf[ExternStudent], "es")
     query.where("es.std = :std", std)
     query.orderBy("es.beginOn")
@@ -54,7 +50,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
 
     if (externStudents.nonEmpty) {
       //find apply
-      val applyQuery = OqlBuilder.from(classOf[ExemptionApply], "apply")
+      val applyQuery = OqlBuilder.from(classOf[ExchangeExemptApply], "apply")
       applyQuery.where("apply.externStudent in(:ess)", externStudents)
       applyQuery.orderBy("apply.externStudent.beginOn")
       val applies = entityDao.search(applyQuery)
@@ -80,7 +76,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
 
   /** 第一步,修改校外学习经历 */
   def editExternStudent(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val externStudent = getLong("externStudent.id") match {
       case Some(id) => entityDao.get(classOf[ExternStudent], id)
       case None => val ns = new ExternStudent
@@ -97,7 +93,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
 
   /** 保存第一步 */
   def saveExternStudent(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     var school: ExternSchool = null
     val schoolId = getInt("externStudent.school.id")
     schoolId match {
@@ -188,8 +184,8 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
       apply.transcriptPath foreach { p =>
         repo.remove(p)
       }
-      val meta = repo.upload("/transcript", part.getInputStream,
-        std.user.code + "_" + part.getSubmittedFileName, std.user.code + " " + std.user.name);
+      val meta = repo.upload("/exchange/transcript", part.getInputStream,
+        std.code + "_" + part.getSubmittedFileName, std.code + " " + std.name);
       apply.transcriptPath = Some(meta.filePath)
     }
 
@@ -198,11 +194,11 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
-  private def getApply(externStudent: ExternStudent): ExemptionApply = {
-    val q = OqlBuilder.from(classOf[ExemptionApply], "apply")
+  private def getApply(externStudent: ExternStudent): ExchangeExemptApply = {
+    val q = OqlBuilder.from(classOf[ExchangeExemptApply], "apply")
     q.where("apply.externStudent =:es", externStudent)
     val applies = entityDao.search(q)
-    val apply = applies.headOption.getOrElse(new ExemptionApply)
+    val apply = applies.headOption.getOrElse(new ExchangeExemptApply)
     apply.externStudent = externStudent
     apply
   }
@@ -216,7 +212,7 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     val apply = getApply(externStudent)
     put("externStudent", externStudent)
     put("apply", apply)
-    entityDao.findBy(classOf[ExemptionCredit], "std", List(apply.externStudent.std)) foreach { e =>
+    entityDao.findBy(classOf[ExchangeExemptCredit], "std", List(apply.externStudent.std)) foreach { e =>
       put("exemptionCredit", e)
     }
     //find grades
@@ -283,13 +279,13 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     }
     apply.updatedAt = Instant.now
     val std = apply.externStudent.std
-    apply.exemptionCredits = courseSet.toSeq.map(_.credits).sum
+    apply.exemptionCredits = courseSet.toSeq.map(_.defaultCredits).sum
     entityDao.saveOrUpdate(apply)
-    val limit = entityDao.findBy(classOf[ExemptionCredit], "std", List(std)).headOption
+    val limit = entityDao.findBy(classOf[ExchangeExemptCredit], "std", List(std)).headOption
     limit match {
       case None => apply.status = AuditStatus.Submited
       case Some(l) =>
-        val totalCredits = entityDao.findBy(classOf[ExemptionApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
+        val totalCredits = entityDao.findBy(classOf[ExchangeExemptApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
         if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
           apply.status = AuditStatus.Submited
         } else {
@@ -304,14 +300,21 @@ class ExemptionAction extends RestfulAction[ExemptionApply] with ProjectSupport 
     }
   }
 
+  @mapping(value = "new", view = "new,form")
+  def editNew(): View = {
+    val entity = getEntity(entityClass, simpleEntityName)
+    put(simpleEntityName, entity)
+    forward()
+  }
+
   @mapping(method = "delete")
-  override def remove(): View = {
-    val std = getUser(classOf[Student])
+  def remove(): View = {
+    val std = getStudent()
 
     val applyId = getLong("apply.id")
     applyId match {
       case Some(id) =>
-        val ea = entityDao.get(classOf[ExemptionApply], id)
+        val ea = entityDao.get(classOf[ExchangeExemptApply], id)
         if (ea.externStudent.std == std && ea.status != AuditStatus.Passed) {
           ea.transcriptPath foreach { p =>
             EmsApp.getBlobRepository(true).remove(p)

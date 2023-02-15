@@ -22,7 +22,7 @@ import org.beangle.data.dao.OqlBuilder
 import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.RestfulAction
 import org.openurp.base.model.ExternSchool
-import org.openurp.starter.edu.helper.ProjectSupport
+import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.app.model.ExchangeScheme
 import org.openurp.std.exchange.model.ExchangeProgram
 

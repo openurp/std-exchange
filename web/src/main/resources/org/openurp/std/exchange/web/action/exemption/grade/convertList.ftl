@@ -1,6 +1,6 @@
 [#ftl]
 [@b.head/]
-  [@b.toolbar title = "<span style=\"color:blue\">" + grade.exchangeStudent.std.user.name + "（<span style=\"padding-left: 1px; padding-right: 1px\">" + grade.exchangeStudent.std.user.code + "</span>）于" + grade.acquiredOn?string("yyyy-MM-dd") +"获得“"+ grade.courseName + "”</span>课程及认定明细"]
+  [@b.toolbar title = "<span style=\"color:blue\">" + grade.exchangeStudent.std.name + "（<span style=\"padding-left: 1px; padding-right: 1px\">" + grade.exchangeStudent.std.code + "</span>）于" + grade.acquiredOn?string("yyyy-MM-dd") +"获得“"+ grade.courseName + "”</span>课程及认定明细"]
     bar.addItem("返回", function() {
       bg.form.submit(document.searchForm);
     }, "backward.png");
@@ -17,7 +17,7 @@
       [@b.col title="课程名称" property="course.name" width="25%"/]
       [@b.col title="课程类别" property="courseType.name" width="15%"/]
       [@b.col title="学年学期" property="semester.code"]${courseGrade.semester.schoolYear} ${courseGrade.semester.name}[/@]
-      [@b.col title="学分" property="course.credits"  width="6%"/]
+      [@b.col title="学分" property="credits"  width="6%"/]
       [@b.col title="成绩" property="score"  width="6%"]${(courseGrade.scoreText)!"--"}[/@]
       [@b.col title="绩点" property="gp"  width="6%"]${(courseGrade.gp?string("0.#"))!'--'}[/@]
       [@b.col title="修读类别" property="courseTakeType.name"/]
@@ -64,7 +64,7 @@
         <td>${planCourse.course.code}</td>
         <td>${planCourse.course.name}</td>
         <td>${planCourse.group.courseType.name}</td>
-        <td>${planCourse.course.credits}</td>
+        <td>${planCourse.course.getCredits(grade.std.level)}</td>
         <td title="第${planCourse.terms}学期 ">${semesters.get(planCourse).schoolYear} ${semesters.get(planCourse).name} 学期</td>
         <td>
           <select name="gradingMode.id${planCourse.id}" style="width: 100px" onchange="displayScore(this.value,${planCourse.id})">

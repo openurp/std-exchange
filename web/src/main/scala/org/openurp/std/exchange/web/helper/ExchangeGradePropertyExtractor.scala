@@ -30,12 +30,12 @@ class ExchangeGradePropertyExtractor extends DefaultPropertyExtractor {
       case "acquiredOn" => DateTimeFormatter.ofPattern("yyyyMM").format(eg.acquiredOn)
       case "courseCodes" => eg.courses.map(c => s"${c.code}").mkString("\r\n")
       case "courseNames" => eg.courses.map(c => s"${c.name}").mkString("\r\n")
-      case "courseCredits" => eg.courses.map(c => s"${c.credits}").mkString("\r\n")
+      case "courseCredits" => eg.courses.map(c => s"${c.defaultCredits}").mkString("\r\n")
       case "courses" =>
         if (eg.courses.isEmpty) {
           "--"
         } else {
-          eg.courses.map(c => s"${c.name} ${c.credits}分").mkString("\r\n")
+          eg.courses.map(c => s"${c.name} ${c.defaultCredits}分").mkString("\r\n")
         }
       case _ =>
         super.getPropertyValue(target, property)

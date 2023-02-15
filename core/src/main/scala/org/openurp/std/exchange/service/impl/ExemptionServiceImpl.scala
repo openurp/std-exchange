@@ -25,10 +25,11 @@ import org.openurp.base.model.Semester
 import org.openurp.base.service.SemesterService
 import org.openurp.base.std.model.Student
 import org.openurp.code.edu.model.CourseTakeType
-import org.openurp.edu.grade.course.model.CourseGrade
+import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.grade.model.Grade
 import org.openurp.edu.program.model.{CoursePlan, PlanCourse, Program}
-import org.openurp.std.exchange.model.{ExchangeGrade, ExemptionCredit}
+import org.openurp.std.exchange.model.{ExchangeGrade}
+import org.openurp.std.exchange.model.ExchangeExemptCredit
 import org.openurp.std.exchange.service.{CourseGradeConvertor, ExemptionCourse, ExemptionService}
 
 import java.time.{Instant, LocalDate}
@@ -46,7 +47,7 @@ class ExemptionServiceImpl extends ExemptionService {
         case None => None
       }
     } else {
-      semesterService.get(program.project, acquiredOn)
+      Some(semesterService.get(program.project, acquiredOn))
     }
   }
 
@@ -92,7 +93,7 @@ class ExemptionServiceImpl extends ExemptionService {
   private def removeExemption(std: Student, course: Course): Unit = {
     val cgs = getExemptionGrades(std, course)
     if (cgs.size > 1) {
-      throw new RuntimeException(s"found ${cgs.size} exemption grades of ${std.user.code}")
+      throw new RuntimeException(s"found ${cgs.size} exemption grades of ${std.code}")
     } else {
       entityDao.remove(cgs)
       this.recalcExemption(std)
@@ -115,12 +116,12 @@ class ExemptionServiceImpl extends ExemptionService {
 
   override def recalcExemption(std: Student): Unit = {
     //重新统计已经免修的学分
-    val ecBuilder = OqlBuilder.from(classOf[ExemptionCredit], "ec")
+    val ecBuilder = OqlBuilder.from(classOf[ExchangeExemptCredit], "ec")
     ecBuilder.where("ec.std=:std", std)
     val ec = entityDao.search(ecBuilder).headOption match {
       case Some(e) => e
       case None =>
-        val e = new ExemptionCredit
+        val e = new ExchangeExemptCredit
         e.std = std
         e
     }
@@ -128,7 +129,7 @@ class ExemptionServiceImpl extends ExemptionService {
     entityDao.findBy(classOf[ExchangeGrade], "externStudent.std", List(std)).filter(_.status == AuditStatus.Passed) foreach { eg =>
       exemptedCourses ++= eg.courses
     }
-    ec.exempted = exemptedCourses.toList.map(_.credits).sum
+    ec.exempted = exemptedCourses.toList.map(_.defaultCredits).sum
     ec.updatedAt = Instant.now
     entityDao.saveOrUpdate(ec)
   }

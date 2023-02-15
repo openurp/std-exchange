@@ -6,7 +6,7 @@
   [@b.form name="exchangeGradeForm" action="!save" target="exchangeGrades" theme="list"]
     [#assign elementSTYLE = "width: 200px"/]
     [#if (exchangeGrade.id)?exists]
-      [@b.field label="学习经历"]<span style="display: inline-block;">${(exchangeGrade.exchangeStudent.std.user.code)!} ${(exchangeGrade.exchangeStudent.std.user.name)!} ${(exchangeGrade.exchangeStudent.school.name)!} ${(exchangeGrade.exchangeStudent.beginOn?string('yyyy-MM'))}~${(exchangeGrade.exchangeStudent.endOn?string("yyyy-MM"))}</span>[/@]
+      [@b.field label="学习经历"]<span style="display: inline-block;">${(exchangeGrade.exchangeStudent.std.code)!} ${(exchangeGrade.exchangeStudent.std.name)!} ${(exchangeGrade.exchangeStudent.school.name)!} ${(exchangeGrade.exchangeStudent.beginOn?string('yyyy-MM'))}~${(exchangeGrade.exchangeStudent.endOn?string("yyyy-MM"))}</span>[/@]
     [#else]
       [@b.field label="学号"]
        <input name="stdCode" style=elementSTYLE placeholder="输入学号后，点击页面空白处，即可获取该学生信息">

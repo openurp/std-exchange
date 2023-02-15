@@ -25,23 +25,23 @@ import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.Stream
 import org.beangle.webmvc.support.action.RestfulAction
 import org.openurp.base.std.model.Student
-import org.openurp.starter.edu.helper.ProjectSupport
-import org.openurp.std.exchange.model.ExemptionCredit
+import org.openurp.starter.web.support.ProjectSupport
+import org.openurp.std.exchange.model.ExchangeExemptCredit
 import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.format.DateTimeFormatter
 
-class CreditAction extends RestfulAction[ExemptionCredit] with ProjectSupport {
+class CreditAction extends RestfulAction[ExchangeExemptCredit] with ProjectSupport {
 
   @response
   def loadStudent: Seq[Properties] = {
     val query = OqlBuilder.from(classOf[Student], "std")
-    query.where("std.user.code=:code", get("q", ""))
+    query.where("std.code=:code", get("q", ""))
     entityDao.search(query).map { std =>
       val p = new Properties()
       p.put("id", std.id)
-      p.put("name", s"${std.state.get.department.name} ${std.user.name}")
+      p.put("name", s"${std.state.get.department.name} ${std.name}")
       p
     }
   }
@@ -61,5 +61,9 @@ class CreditAction extends RestfulAction[ExemptionCredit] with ProjectSupport {
 
   protected override def configImport(setting: ImportSetting): Unit = {
     setting.listeners = List(new ExemptionCreditImportListener(getProject, entityDao))
+  }
+
+  override protected def simpleEntityName: String = {
+    "exemptionCredit"
   }
 }

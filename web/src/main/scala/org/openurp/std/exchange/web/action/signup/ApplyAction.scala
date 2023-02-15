@@ -25,7 +25,7 @@ import org.beangle.web.action.annotation.{mapping, param}
 import org.beangle.web.action.view.{Stream, View}
 import org.beangle.webmvc.support.action.RestfulAction
 import org.openurp.base.model.ExternSchool
-import org.openurp.starter.edu.helper.ProjectSupport
+import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.app.model.{ExchangeApply, ExchangeScheme}
 import org.openurp.std.exchange.web.helper.DocHelper
 import org.openurp.std.info.model.{Home, SocialRelation}
@@ -48,7 +48,7 @@ class ApplyAction extends RestfulAction[ExchangeApply] with ProjectSupport {
 
   @mapping(value = "{id}")
   override def info(@param("id") id: String): View = {
-    val lid = convertId[Long](id)
+    val lid = id.toLong
     val apply = entityDao.get(classOf[ExchangeApply], lid)
     val relations = entityDao.findBy(classOf[SocialRelation], "std", List(apply.std))
     put("relations", relations.sortBy(_.id))
@@ -56,7 +56,7 @@ class ApplyAction extends RestfulAction[ExchangeApply] with ProjectSupport {
     val homes = entityDao.findBy(classOf[Home], "std", List(apply.std))
     val home = homes.headOption.getOrElse(new Home)
     put("home", home)
-    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(apply.std.user.code))
+    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(apply.std.code))
     put("exchangeApply", apply)
     forward()
   }
@@ -67,7 +67,7 @@ class ApplyAction extends RestfulAction[ExchangeApply] with ProjectSupport {
     val std = apply.std
     val bytes = DocHelper.toDoc(apply, entityDao)
     val contentType = MediaTypes.get("docx", MediaTypes.ApplicationOctetStream).toString
-    Stream(new ByteArrayInputStream(bytes), contentType, std.user.code + "_" + std.user.name + "_" + apply.scheme.program.name + "_申请表.docx")
+    Stream(new ByteArrayInputStream(bytes), contentType, std.code + "_" + std.name + "_" + apply.scheme.program.name + "_申请表.docx")
   }
 
 }

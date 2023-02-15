@@ -20,15 +20,15 @@ package org.openurp.std.exchange.web.action.std
 import org.beangle.commons.activation.MediaTypes
 import org.beangle.commons.codec.digest.Digests
 import org.beangle.commons.lang.Strings
-import org.beangle.data.dao.OqlBuilder
+import org.beangle.data.dao.{EntityDao, OqlBuilder}
 import org.beangle.ems.app.Ems
 import org.beangle.web.action.view.{Stream, View}
 import org.beangle.webmvc.support.action.EntityAction
-import org.openurp.base.model.{ExternSchool, Person}
+import org.openurp.base.model.{ExternSchool, Person, Project, User}
 import org.openurp.base.std.model.Student
 import org.openurp.code.person.model.{FamilyRelationship, Nation, PoliticalStatus}
-import org.openurp.edu.grade.course.model.StdGpa
-import org.openurp.starter.edu.helper.ProjectSupport
+import org.openurp.edu.grade.model.StdGpa
+import org.openurp.starter.web.support.StudentSupport
 import org.openurp.std.exchange.app.model.{ExchangeApply, ExchangeApplyChoice, ExchangeScheme}
 import org.openurp.std.exchange.web.helper.DocHelper
 import org.openurp.std.info.model.{Contact, Home, SocialRelation}
@@ -36,12 +36,9 @@ import org.openurp.std.info.model.{Contact, Home, SocialRelation}
 import java.io.ByteArrayInputStream
 import java.time.Instant
 
-class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
+class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
 
-  def index(): View = {
-    put("projects", getUserProjects(classOf[Student]))
-    val std = getUser(classOf[Student])
-
+  override def projectIndex(std: Student): View = {
     val query = OqlBuilder.from(classOf[ExchangeApply], "apply")
     query.where("apply.std = :std", std)
     query.orderBy("apply.updatedAt desc")
@@ -66,7 +63,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     put("schemes", avaliableSchemes)
     put("std", std)
     put("stdGpa", getStdGpa(std))
-    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(std.user.code))
+    put("avatar_url", Ems.api + "/platform/user/avatars/" + Digests.md5Hex(std.code))
     put("avatar_upload_url", Ems.base + "/portal/user/avatar")
     if (applies.nonEmpty) {
       forward()
@@ -80,7 +77,10 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
    * @return
    */
   def editPerson(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
+
+    given project: Project = std.project
+
     val scheme = entityDao.get(classOf[ExchangeScheme], longId("scheme"))
     put("scheme", scheme)
 
@@ -94,19 +94,20 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
   }
 
   def savePerson(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val person = std.person
-    populate(person, classOf[Person].getName, "person")
+    populate(person, "person")
     person.updatedAt = Instant.now
 
     val contacts = entityDao.findBy(classOf[Contact], "std", List(std))
+    val user = entityDao.findBy(classOf[User], "code", std.code).head
     val contact = contacts.headOption.getOrElse(new Contact)
-    populate(contact, classOf[Contact].getName, "contact")
+    populate(contact, "contact")
     contact.std = std
     contact.updatedAt = Instant.now
-    std.user.email = contact.email
-    std.user.mobile = contact.mobile //同步更新用户信息中的手机
-    entityDao.saveOrUpdate(person, contact, std.user)
+    user.email = contact.email
+    user.mobile = contact.mobile //同步更新用户信息中的手机
+    entityDao.saveOrUpdate(person, contact, user)
 
     redirect("editHome", "schemeId=" + longId("scheme"), "info.save.success")
   }
@@ -116,7 +117,10 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
    * @return
    */
   def editHome(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
+
+    given project: Project = std.project
+
     val scheme = entityDao.get(classOf[ExchangeScheme], longId("scheme"))
     put("scheme", scheme)
 
@@ -140,10 +144,10 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
   }
 
   def saveHome(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val homes = entityDao.findBy(classOf[Home], "std", List(std))
     val home = homes.headOption.getOrElse(new Home)
-    populate(home, classOf[Home].getName, "home")
+    populate(home, "home")
     home.std = std
     home.updatedAt = Instant.now
 
@@ -152,8 +156,8 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
     val relation1 = orderedR.headOption.getOrElse(new SocialRelation)
     val relation2 = if (orderedR.size >= 2) orderedR(1) else new SocialRelation
 
-    populate(relation1, classOf[SocialRelation].getName, "relation1")
-    populate(relation2, classOf[SocialRelation].getName, "relation2")
+    populate(relation1, "relation1")
+    populate(relation2, "relation2")
     relation1.std = std
 
     entityDao.saveOrUpdate(home, relation1)
@@ -171,7 +175,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
    * @return
    */
   def editApply(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val schemeId = longId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
@@ -206,7 +210,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
   }
 
   def saveApply(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val schemeId = longId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
@@ -230,8 +234,9 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
 
     val contacts = entityDao.findBy(classOf[Contact], "std", List(std))
     val contact = contacts.headOption.getOrElse(new Contact)
-    apply.email = std.user.email.get
-    apply.mobile = std.user.mobile.get
+    val user = entityDao.findBy(classOf[User], "code", std.code).head
+    apply.email = user.email.get
+    apply.mobile = user.mobile.get
     apply.address = contact.address.get
     val stdGpa = getStdGpa(std)
     apply.gpa = stdGpa.gpa
@@ -242,7 +247,7 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
   }
 
   def remove(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val schemeId = longId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
@@ -253,12 +258,12 @@ class SignupAction extends EntityAction[ExchangeApply] with ProjectSupport {
   }
 
   def download(): View = {
-    val std = getUser(classOf[Student])
+    val std = getStudent()
     val schemeId = longId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
     val bytes = DocHelper.toDoc(apply, entityDao)
     val contentType = MediaTypes.get("docx", MediaTypes.ApplicationOctetStream).toString
-    Stream(new ByteArrayInputStream(bytes), contentType, std.user.code + "_" + std.user.name + "_" + apply.scheme.program.name + "_申请表.docx")
+    Stream(new ByteArrayInputStream(bytes), contentType, std.code + "_" + std.name + "_" + apply.scheme.program.name + "_申请表.docx")
   }
 }

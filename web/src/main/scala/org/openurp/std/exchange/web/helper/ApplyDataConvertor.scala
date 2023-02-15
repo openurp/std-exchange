@@ -33,10 +33,10 @@ object ApplyDataConvertor {
 
   def convert(apply: ExchangeApply, home: Home, relations: Seq[SocialRelation]): collection.Map[String, String] = {
     val data = Collections.newMap[String, String]
-    val user = apply.std.user
-    data.put("user_code", user.code)
-    data.put("user_name", user.name)
-    data.put("user_school_name", user.school.name)
+    val std = apply.std
+    data.put("user_code", std.code)
+    data.put("user_name", std.name)
+    data.put("user_school_name", std.project.school.name)
 
     val state = apply.std.state.get
     data.put("state_department_name", state.department.name)

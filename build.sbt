@@ -23,9 +23,9 @@ ThisBuild / developers := List(
 ThisBuild / description := "OpenURP Std Exchange"
 ThisBuild / homepage := Some(url("http://openurp.github.io/std-exchange/index.html"))
 
-val apiVer = "0.25.1"
-val starterVer = "0.0.20"
-val baseVer = "0.1.29"
+val apiVer = "0.31.0.Beta2"
+val starterVer = "0.2.10"
+val baseVer = "0.3.3"
 val openurp_edu_api = "org.openurp.edu" % "openurp-edu-api" % apiVer
 val openurp_std_api = "org.openurp.std" % "openurp-std-api" % apiVer
 val openurp_stater_web = "org.openurp.starter" % "openurp-starter-web" % starterVer
@@ -51,7 +51,7 @@ lazy val web = (project in file("web"))
   ).dependsOn(core)
 
 lazy val webapp = (project in file("webapp"))
-  .enablePlugins(WarPlugin,UndertowPlugin)
+  .enablePlugins(WarPlugin,TomcatPlugin)
   .settings(
     name := "openurp-std-exchange-webapp",
     common

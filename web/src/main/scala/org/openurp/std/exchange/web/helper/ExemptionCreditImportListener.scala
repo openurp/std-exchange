@@ -22,7 +22,7 @@ import org.beangle.data.dao.{EntityDao, OqlBuilder}
 import org.beangle.data.transfer.importer.{ImportListener, ImportResult}
 import org.openurp.base.model.Project
 import org.openurp.base.std.model.Student
-import org.openurp.std.exchange.model.ExemptionCredit
+import org.openurp.std.exchange.model.ExchangeExemptCredit
 
 import java.time.Instant
 
@@ -35,7 +35,7 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
     var std: Student = null
     transfer.curData.get("stdCode") foreach { stdCode =>
       val builder = OqlBuilder.from(classOf[Student], "s")
-      builder.where("s.project=:project and s.user.code=:stdCode", project, stdCode)
+      builder.where("s.project=:project and s.code=:stdCode", project, stdCode)
       val stds = entityDao.search(builder)
       if (stds.nonEmpty) {
         std = stds.head
@@ -50,14 +50,14 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
         tr.addFailure("错误的学分上限", transfer.curData.get("maxValue").orNull)
         return
       }
-      val query = OqlBuilder.from(classOf[ExemptionCredit], "ec")
+      val query = OqlBuilder.from(classOf[ExchangeExemptCredit], "ec")
       query.where("ec.std=:std", std)
       val ecs = entityDao.search(query)
       val ec =
         if (ecs.nonEmpty) {
           ecs.head
         } else {
-          val ec = new ExemptionCredit
+          val ec = new ExchangeExemptCredit
           ec.std = std
           ec
         }
@@ -69,7 +69,7 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
 
   override def onItemFinish(tr: ImportResult): Unit = {
     if (null != transfer.current) {
-      val ec = transfer.current.asInstanceOf[ExemptionCredit]
+      val ec = transfer.current.asInstanceOf[ExchangeExemptCredit]
       entityDao.saveOrUpdate(ec)
     }
   }

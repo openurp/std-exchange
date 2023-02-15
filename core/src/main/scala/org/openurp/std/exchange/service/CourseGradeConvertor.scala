@@ -23,7 +23,7 @@ import org.beangle.security.Securities
 import org.openurp.base.std.model.Student
 import org.openurp.code.edu.model.{CourseTakeType, GradeType}
 import org.openurp.edu.clazz.model.CourseTaker
-import org.openurp.edu.grade.course.model.{CourseGrade, GaGrade}
+import org.openurp.edu.grade.model.{CourseGrade, GaGrade}
 import org.openurp.edu.grade.model.Grade
 
 import java.time.Instant

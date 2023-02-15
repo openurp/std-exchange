@@ -10,7 +10,7 @@
 [@b.card]
   [@b.card_body]
   [@b.form name="externStudentForm" action="!saveGrades" theme="list"  enctype="multipart/form-data"  onsubmit="checkAttachment"]
-    [@b.field label="学号"]${(externStudent.std.user.code)!} ${(externStudent.std.user.name)!}[/@]
+    [@b.field label="学号"]${(externStudent.std.code)!} ${(externStudent.std.name)!}[/@]
     [@b.field label="校外学校"]${externStudent.school.name}(${externStudent.beginOn?string("yyyy-MM")}~${externStudent.endOn?string("yyyy-MM")})[/@]
     [@b.field label="成绩证明材料"]
      <input type="file" name="transcript" >

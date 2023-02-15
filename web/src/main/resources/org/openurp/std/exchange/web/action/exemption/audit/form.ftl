@@ -6,7 +6,7 @@
   [@b.form name="externStudentForm" action="!save" theme="list"]
     [#assign elementSTYLE = "width: 200px"/]
     [#if (externStudent.id)?exists]
-      [@b.field label="学号"]<span style="display: inline-block;">${(apply.externStudent.std.user.code)!} ${(apply.externStudent.std.user.name)!}[/@]
+      [@b.field label="学号"]<span style="display: inline-block;">${(apply.externStudent.std.code)!} ${(apply.externStudent.std.name)!}[/@]
     [#else]
       [@b.field label="学号"]
        <input name="stdCode" style=elementSTYLE placeholder="输入学号后，点击页面空白处，即可获取该学生信息">

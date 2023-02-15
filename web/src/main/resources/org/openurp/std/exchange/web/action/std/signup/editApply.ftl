@@ -16,7 +16,7 @@
     [#assign person=std.person/]
   [@b.form name="applyForm" action="!saveApply" theme="list" ]
     [#assign optionNames=["--","(第一志愿)","(第二志愿)"]/]
-    [@b.field label="学号"]${(std.user.code)!}[/@]
+    [@b.field label="学号"]${(std.code)!}[/@]
     [@b.field label="年级"]${std.state.grade}[/@]
     [@b.field label="院系"]${std.state.department.name}[/@]
     [@b.field label="专业"]${std.state.major.name} ${(std.state.direction.name)!}[/@]

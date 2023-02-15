@@ -1,5 +1,5 @@
 [#ftl]
-[@b.toolbar title="${apply.externStudent.std.user.name}的跨校交流"]
+[@b.toolbar title="${apply.externStudent.std.name}的跨校交流"]
   bar.addBack();
 [/@]
 [@b.card class="card-info card-outline"]
@@ -17,9 +17,9 @@
 <table class="infoTable">
     <tr>
       <td class="title" width="10%">学号：</td>
-      <td width="23%">${(std.user.code)!}</td>
+      <td width="23%">${(std.code)!}</td>
       <td class="title" width="10%">姓名：</td>
-      <td width="23%">${std.user.name?html}</td>
+      <td width="23%">${std.name?html}</td>
       <td class="title" width="10%">修读专业：</td>
       <td>${(apply.externStudent.majorName?html)!}</td>
     </tr>
@@ -52,7 +52,7 @@
             [@b.col property="acquiredOn" title="获得年月" width="10%"]${grade.acquiredOn?string("yyyy-MM")}[/@]
             [@b.col title="免修冲抵" width="30%"]
                [#list grade.courses as c]
-                 ${c.code} ${c.name} ${c.credits}分[#if c_has_next]<br>[/#if]
+                 ${c.code} ${c.name} ${c.defaultCredits}分[#if c_has_next]<br>[/#if]
                [/#list]
             [/@]
             [@b.col property="remark" title="说明" width="20%"/]

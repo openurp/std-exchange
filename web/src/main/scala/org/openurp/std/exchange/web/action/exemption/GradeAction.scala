@@ -23,13 +23,13 @@ import org.beangle.data.transfer.exporter.ExportSetting
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.{PathView, View}
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.model.Semester
+import org.openurp.base.model.{Project, Semester}
 import org.openurp.base.std.model.ExternStudent
 import org.openurp.code.edu.model.{CourseTakeType, GradingMode}
-import org.openurp.edu.grade.course.model.CourseGrade
+import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.edu.program.model.PlanCourse
-import org.openurp.starter.edu.helper.ProjectSupport
+import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.model.ExchangeGrade
 import org.openurp.std.exchange.service.{ExemptionCourse, ExemptionService}
 import org.openurp.std.exchange.web.helper.ExchangeGradePropertyExtractor
@@ -45,17 +45,19 @@ class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
   @response
   def loadStudent: Seq[Properties] = {
     val query = OqlBuilder.from(classOf[ExternStudent], "es")
-    query.where("es.std.user.code=:code", get("q", ""))
+    query.where("es.std.code=:code", get("q", ""))
     val yyyyMM = DateTimeFormatter.ofPattern("yyyy-MM")
     entityDao.search(query).map { es =>
       val p = new Properties()
       p.put("value", es.id.toString)
-      p.put("text", s"${es.std.user.code} ${es.std.user.name} ${es.school.name}(${es.beginOn.format(yyyyMM)})")
+      p.put("text", s"${es.std.code} ${es.std.name} ${es.school.name}(${es.beginOn.format(yyyyMM)})")
       p
     }
   }
 
   def convertList: View = {
+    given project: Project = getProject
+
     val grade = entityDao.get(classOf[ExchangeGrade], longId("exchangeGrade"))
     put("grade", grade)
     val es = grade.externStudent

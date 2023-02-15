@@ -12,9 +12,9 @@
 <table class="infoTable">
       <tr>
         <td class="title" width="10%">学号:</td>
-        <td class="content">${(apply.std.user.code)!}</td>
+        <td class="content">${(apply.std.code)!}</td>
         <td class="title" width="10%" >姓名:</td>
-        <td class="content">${(apply.std.user.name)!}</td>
+        <td class="content">${(apply.std.name)!}</td>
         <td class="title" rowspan="6" style="text-align:left">照片<br>
         正面、免冠、白底证件照;jpg格式;300x420 像素;分辨率不小于300 dpi;大小不超过200k
         </td>

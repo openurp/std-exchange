@@ -5,8 +5,8 @@
   <div class="search-panel">
       [@b.form name="exchangeApplySearchForm" action="!search" target="exchangeApplylist" title="ui.searchForm" theme="search"]
           [@b.select name="exchangeApply.scheme.id" label="报名批次" items=schemes /]
-          [@b.textfields names="exchangeApply.std.user.code;学号"/]
-          [@b.textfields names="exchangeApply.std.user.name;姓名"/]
+          [@b.textfields names="exchangeApply.std.code;学号"/]
+          [@b.textfields names="exchangeApply.std.name;姓名"/]
           [@b.textfields names="exchangeApply.std.state.department.name;院系"/]
           [@b.select name="school.id" label="学校" items=schools empty="..."/]
           <input type="hidden" name="orderBy" value="exchangeApply.updatedAt desc"/>

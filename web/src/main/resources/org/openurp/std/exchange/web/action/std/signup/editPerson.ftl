@@ -10,7 +10,7 @@
     [@b.card_body]
     [#assign person=std.person/]
   [@b.form name="applyForm" action="!savePerson" theme="list" ]
-    [@b.field label="姓名"]${(std.user.name)!}[/@]
+    [@b.field label="姓名"]${(std.name)!}[/@]
     [@b.field label="性别"]${person.gender.name}[/@]
     [@b.field label="证件号码"]${person.code}[/@]
     [@b.field label="出生日期"]${person.birthday?string("yyyy-MM-dd")}[/@]
