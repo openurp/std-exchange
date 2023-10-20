@@ -1,12 +1,12 @@
 [#ftl]
 [@b.head/]
-  [@b.grid items=exchangeGrades var="exchangeGrade"]
+  [@b.grid items=externGrades var="externGrade"]
     [@b.gridbar]
       bar.addItem("${b.text("action.new")}", action.add());
       bar.addItem("${b.text("action.modify")}", action.edit());
       bar.addItem("成绩认定", action.single("convertList"), "action-update");
       bar.addItem("${b.text("action.delete")}", action.remove("确认要删除吗？"));
-      [#if exchangeGrades.totalItems gt 10000]
+      [#if externGrades.totalItems gt 10000]
         bar.addItem("导出", function() {
           alert("导出数据每次不能超过10000条，建议分批导出。");
         });
@@ -19,15 +19,15 @@
       [@b.col title="学号" property="exchangeStudent.std.code"  width="13%"/]
       [@b.col title="姓名" property="exchangeStudent.std.name" width="10%"/]
       [@b.col title="专业" property="exchangeStudent.majorName"  width="15%"]
-         <span title="${exchangeGrade.exchangeStudent.school.name}">${exchangeGrade.exchangeStudent.majorName}</span>
+         <span title="${externGrade.exchangeStudent.school.name}">${externGrade.exchangeStudent.majorName}</span>
       [/@]
       [@b.col title="课程" property="courseName" width="20%"/]
       [@b.col title="得分" property="scoreText" width="5%"/]
       [@b.col title="学分" property="credits" width="5%"/]
-      [@b.col title="获得日期" property="acquiredOn" width="7%"]${exchangeGrade.acquiredOn?string("yyyy-MM")}[/@]
+      [@b.col title="获得日期" property="acquiredOn" width="7%"]${externGrade.acquiredOn?string("yyyy-MM")}[/@]
       [@b.col title="免修" sortable="false" width="25%"]
-        [#if exchangeGrade.courses?size >0 ]
-        <span style="font-size:0.8em">[#list exchangeGrade.courses as c]${c.name} ${c.defaultCredits}分 [#if c_has_next]<br>[/#if][/#list]</span>
+        [#if externGrade.exempts?size >0 ]
+        <span style="font-size:0.8em">[#list externGrade.exempts as c]${c.name} ${c.defaultCredits}分 [#if c_has_next]<br>[/#if][/#list]</span>
         [#else]--[/#if]
       [/@]
     [/@]

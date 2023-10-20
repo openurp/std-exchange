@@ -19,28 +19,30 @@ package org.openurp.std.exchange.web.action.exemption
 
 import org.beangle.commons.collection.{Collections, Properties}
 import org.beangle.data.dao.OqlBuilder
-import org.beangle.data.transfer.exporter.ExportSetting
+import org.beangle.data.transfer.exporter.ExportContext
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.{PathView, View}
-import org.beangle.webmvc.support.action.RestfulAction
+import org.beangle.webmvc.support.action.{ExportSupport, RestfulAction}
+import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{Project, Semester}
 import org.openurp.base.std.model.ExternStudent
 import org.openurp.code.edu.model.{CourseTakeType, GradingMode}
+import org.openurp.edu.exempt.service.impl.ExemptionCourse
+import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.edu.program.model.PlanCourse
 import org.openurp.starter.web.support.ProjectSupport
-import org.openurp.std.exchange.model.ExchangeGrade
-import org.openurp.std.exchange.service.{ExemptionCourse, ExemptionService}
-import org.openurp.std.exchange.web.helper.ExchangeGradePropertyExtractor
+import org.openurp.std.exchange.service.ExchangeService
+import org.openurp.std.exchange.web.helper.ExternGradePropertyExtractor
 
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
+class GradeAction extends RestfulAction[ExternGrade], ProjectSupport, ExportSupport[ExternGrade] {
 
   var coursePlanProvider: CoursePlanProvider = _
-  var exemptionService: ExemptionService = _
+  var exemptionService: ExchangeService = _
 
   @response
   def loadStudent: Seq[Properties] = {
@@ -55,20 +57,20 @@ class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
     }
   }
 
-  def convertList: View = {
+  def convertList(): View = {
     given project: Project = getProject
 
-    val grade = entityDao.get(classOf[ExchangeGrade], longId("exchangeGrade"))
+    val grade = entityDao.get(classOf[ExternGrade], getLongId("externGrade"))
     put("grade", grade)
     val es = grade.externStudent
     val std = es.std
     val plan = coursePlanProvider.getCoursePlan(grade.externStudent.std)
     if (plan.isEmpty) return PathView("noPlanMsg")
-    val planCourses = exemptionService.getConvertablePlanCourses(std, plan.get, grade.acquiredOn)
-    put("convertedGrades", exemptionService.getConvertedGrades(std, grade.courses))
+    val planCourses = exemptionService.getConvertablePlanCourses(std, plan.get)
+    put("convertedGrades", exemptionService.getConvertedGrades(std, grade.exempts))
     val semesters = Collections.newMap[PlanCourse, Semester]
     planCourses foreach { pc =>
-      exemptionService.getSemester(plan.get.program, grade.acquiredOn, pc.terms.termList.headOption) foreach { s =>
+      exemptionService.getSemester(plan.get.program, pc.terms.termList.headOption) foreach { s =>
         semesters.put(pc, s)
       }
     }
@@ -79,47 +81,45 @@ class GradeAction extends RestfulAction[ExchangeGrade] with ProjectSupport {
     forward()
   }
 
-  def convert: View = {
-    val eg = entityDao.get(classOf[ExchangeGrade], longId("grade"))
-    val planCourses = entityDao.find(classOf[PlanCourse], longIds("planCourse"))
-    val ecs = Collections.newBuffer[ExemptionCourse]
+  def convert(): View = {
+    val eg = entityDao.get(classOf[ExternGrade], getLongId("grade"))
+    val planCourses = entityDao.find(classOf[PlanCourse], getLongIds("planCourse"))
+    val cs = Collections.newSet[Course]
     val program = planCourses.head.group.plan.program
     planCourses foreach { pc =>
-      val semester = exemptionService.getSemester(program, eg.acquiredOn, pc.terms.termList.headOption).orNull
+      val semester = exemptionService.getSemester(program, pc.terms.termList.headOption).orNull
       val scoreText = get("scoreText" + pc.id)
       if (null != semester && scoreText.nonEmpty) {
-        val gradingMode = entityDao.get(classOf[GradingMode], getInt("gradingMode.id" + pc.id, 0))
-        val ec = ExemptionCourse(pc.course, pc.group.courseType, semester, pc.course.examMode, gradingMode,
-          getFloat("score" + pc.id), scoreText)
-        ecs += ec
+        cs.add(pc.course)
       }
     }
-    this.exemptionService.addExemption(eg, ecs.toSeq)
+    this.exemptionService.addExemption(eg, cs)
     redirect("search", "info.action.success")
   }
 
-  def removeCourseGrade: View = {
-    val eg = entityDao.get(classOf[ExchangeGrade], longId("grade"))
-    val cg = entityDao.get(classOf[CourseGrade], longId("courseGrade"))
+  def removeCourseGrade(): View = {
+    val eg = entityDao.get(classOf[ExternGrade], getLongId("grade"))
+    val cg = entityDao.get(classOf[CourseGrade], getLongId("courseGrade"))
     exemptionService.removeExemption(eg, cg.course)
     redirect("search", "info.action.success")
   }
 
-  override def configExport(setting: ExportSetting): Unit = {
-    super.configExport(setting)
-    setting.context.extractor = new ExchangeGradePropertyExtractor
+  override def configExport(context: ExportContext): Unit = {
+    super.configExport(context)
+    context.extractor = new ExternGradePropertyExtractor
   }
 
-  override protected def getQueryBuilder: OqlBuilder[ExchangeGrade] = {
+  override protected def getQueryBuilder: OqlBuilder[ExternGrade] = {
     val builder = super.getQueryBuilder
+    builder.where("externGrade.externStudent.exchange=true")
     getDate("fromAt") foreach { fromAt =>
-      builder.where("exchangeGrade.updatedAt >= :fromAt", fromAt.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
+      builder.where("externGrade.updatedAt >= :fromAt", fromAt.atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
     }
     getDate("toAt") foreach { toAt =>
-      builder.where(" exchangeGrade.updatedAt <= :toAt", toAt.plusDays(1).atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
+      builder.where(" externGrade.updatedAt <= :toAt", toAt.plusDays(1).atTime(0, 0, 0).atZone(ZoneId.systemDefault()).toInstant)
     }
     getBoolean("hasCourse") foreach { hasCourse =>
-      builder.where((if (hasCourse) "" else "not ") + "exists (from exchangeGrade.courses ec)")
+      builder.where((if (hasCourse) "" else "not ") + "exists (from externGrade.exempts ec)")
     }
     builder
   }

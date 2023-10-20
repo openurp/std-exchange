@@ -62,7 +62,7 @@ class ApplyAction extends RestfulAction[ExchangeApply] with ProjectSupport {
   }
 
   def download(): View = {
-    val applyId = longId("exchangeApply")
+    val applyId = getLongId("exchangeApply")
     val apply = entityDao.get(classOf[ExchangeApply], applyId)
     val std = apply.std
     val bytes = DocHelper.toDoc(apply, entityDao)

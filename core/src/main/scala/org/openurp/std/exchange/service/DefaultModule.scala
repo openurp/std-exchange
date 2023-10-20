@@ -20,13 +20,13 @@ package org.openurp.std.exchange.service
 import org.beangle.cdi.bind.BindModule
 import org.openurp.base.service.impl.SemesterServiceImpl
 import org.openurp.edu.program.domain.{DefaultCoursePlanProvider, DefaultProgramProvider}
-import org.openurp.std.exchange.service.impl.ExemptionServiceImpl
+import org.openurp.std.exchange.service.impl.ExchangeServiceImpl
 
 class DefaultModule extends BindModule {
   override protected def binding(): Unit = {
     bind(classOf[DefaultProgramProvider])
     bind(classOf[DefaultCoursePlanProvider])
     bind(classOf[SemesterServiceImpl])
-    bind(classOf[ExemptionServiceImpl])
+    bind(classOf[ExchangeServiceImpl])
   }
 }

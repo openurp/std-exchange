@@ -35,7 +35,7 @@
             [@b.col property="scoreText" title="成绩" width="5%"/]
             [@b.col property="acquiredOn" title="获得年月" width="10%"]${grade.acquiredOn?string("yyyy-MM")}[/@]
             [@b.col title="免修冲抵" width="35%"]
-               [#list grade.courses as c]
+               [#list grade.exempts as c]
                  ${c.code} ${c.name} ${c.defaultCredits}分[#if c_has_next]<br>[/#if]
                [/#list]
             [/@]

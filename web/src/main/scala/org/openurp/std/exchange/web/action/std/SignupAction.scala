@@ -77,11 +77,11 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
    * @return
    */
   def editPerson(): View = {
-    val std = getStudent()
+    val std = getStudent
 
     given project: Project = std.project
 
-    val scheme = entityDao.get(classOf[ExchangeScheme], longId("scheme"))
+    val scheme = entityDao.get(classOf[ExchangeScheme], getLongId("scheme"))
     put("scheme", scheme)
 
     put("nations", getCodes(classOf[Nation]))
@@ -94,7 +94,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
   }
 
   def savePerson(): View = {
-    val std = getStudent()
+    val std = getStudent
     val person = std.person
     populate(person, "person")
     person.updatedAt = Instant.now
@@ -109,7 +109,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
     user.mobile = contact.mobile //同步更新用户信息中的手机
     entityDao.saveOrUpdate(person, contact, user)
 
-    redirect("editHome", "schemeId=" + longId("scheme"), "info.save.success")
+    redirect("editHome", "schemeId=" + getLongId("scheme"), "info.save.success")
   }
 
   /** 第二步编辑家庭信息
@@ -117,11 +117,11 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
    * @return
    */
   def editHome(): View = {
-    val std = getStudent()
+    val std = getStudent
 
     given project: Project = std.project
 
-    val scheme = entityDao.get(classOf[ExchangeScheme], longId("scheme"))
+    val scheme = entityDao.get(classOf[ExchangeScheme], getLongId("scheme"))
     put("scheme", scheme)
 
     put("nations", getCodes(classOf[Nation]))
@@ -144,7 +144,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
   }
 
   def saveHome(): View = {
-    val std = getStudent()
+    val std = getStudent
     val homes = entityDao.findBy(classOf[Home], "std", List(std))
     val home = homes.headOption.getOrElse(new Home)
     populate(home, "home")
@@ -167,7 +167,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
       entityDao.saveOrUpdate(relation2)
     }
 
-    redirect("editApply", "schemeId=" + longId("scheme"), "info.save.success")
+    redirect("editApply", "schemeId=" + getLongId("scheme"), "info.save.success")
   }
 
   /** 第三步 编辑学籍和成绩
@@ -175,8 +175,8 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
    * @return
    */
   def editApply(): View = {
-    val std = getStudent()
-    val schemeId = longId("scheme")
+    val std = getStudent
+    val schemeId = getLongId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
     apply.std = std
@@ -210,8 +210,8 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
   }
 
   def saveApply(): View = {
-    val std = getStudent()
-    val schemeId = longId("scheme")
+    val std = getStudent
+    val schemeId = getLongId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
     populate(apply, "apply")
@@ -247,8 +247,8 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
   }
 
   def remove(): View = {
-    val std = getStudent()
-    val schemeId = longId("scheme")
+    val std = getStudent
+    val schemeId = getLongId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
     if (scheme.opened) {
@@ -258,8 +258,8 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
   }
 
   def download(): View = {
-    val std = getStudent()
-    val schemeId = longId("scheme")
+    val std = getStudent
+    val schemeId = getLongId("scheme")
     val scheme = entityDao.get(classOf[ExchangeScheme], schemeId)
     val apply = getApply(std, scheme)
     val bytes = DocHelper.toDoc(apply, entityDao)

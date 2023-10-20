@@ -15,12 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.openurp.std.exchange.web.action.depart
+package org.openurp.std.exchange.service
 
-import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.edu.exempt.model.ExchExemptApply
-import org.openurp.starter.web.support.ProjectSupport
+import org.openurp.base.std.model.Student
+import org.openurp.edu.exempt.service.ExemptionService
 
-class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
+trait ExchangeService extends ExemptionService {
+
+  def recalcExemption(std: Student): Unit
 
 }
+

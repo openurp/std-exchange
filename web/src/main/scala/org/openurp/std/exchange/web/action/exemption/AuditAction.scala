@@ -29,19 +29,21 @@ import org.openurp.base.model.{AuditStatus, ExternSchool, Project, Semester}
 import org.openurp.base.std.model.Student
 import org.openurp.code.edu.model.GradingMode
 import org.openurp.code.std.model.StudentStatus
+import org.openurp.edu.exempt.model.ExchExemptApply
+import org.openurp.edu.exempt.service.impl.ExemptionCourse
+import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.starter.web.support.ProjectSupport
-import org.openurp.std.exchange.model.{ExchangeExemptApply, ExchangeGrade}
-import org.openurp.std.exchange.service.{ExemptionCourse, ExemptionService}
+import org.openurp.std.exchange.service.ExchangeService
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class AuditAction extends RestfulAction[ExchangeExemptApply] with ProjectSupport {
+class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
 
   var coursePlanProvider: CoursePlanProvider = _
 
-  var exemptionService: ExemptionService = _
+  var exemptionService: ExchangeService = _
 
   override def indexSetting(): Unit = {
     given project: Project = getProject
@@ -50,18 +52,18 @@ class AuditAction extends RestfulAction[ExchangeExemptApply] with ProjectSupport
   }
 
   override def info(id: String): View = {
-    val apply = entityDao.get(classOf[ExchangeExemptApply], id.toLong)
+    val apply = entityDao.get(classOf[ExchExemptApply], id.toLong)
     val repo = EmsApp.getBlobRepository(true)
     apply.transcriptPath foreach { p =>
       put("transcriptPath", repo.url(p))
     }
     put("apply", apply)
-    val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
+    val grades = entityDao.findBy(classOf[ExternGrade], "externStudent", List(apply.externStudent))
     put("grades", grades)
     forward()
   }
 
-  override protected def editSetting(entity: ExchangeExemptApply): Unit = {
+  override protected def editSetting(entity: ExchExemptApply): Unit = {
     put("schools", entityDao.getAll(classOf[ExternSchool]))
     val project = getProject
     put("levels", project.levels)
@@ -104,11 +106,11 @@ class AuditAction extends RestfulAction[ExchangeExemptApply] with ProjectSupport
   }
 
   def audit(): View = {
-    val esId = longId("apply")
+    val esId = getLongId("apply")
     val auditOpinion = get("auditOpinion")
-    val apply = entityDao.get(classOf[ExchangeExemptApply], esId)
+    val apply = entityDao.get(classOf[ExchExemptApply], esId)
     val passed = getBoolean("passed", false)
-    val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
+    val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
       .where("eg.externStudent=:es", apply.externStudent)
     val grades = entityDao.search(gradeQuery)
     apply.auditOpinion = auditOpinion
@@ -117,18 +119,14 @@ class AuditAction extends RestfulAction[ExchangeExemptApply] with ProjectSupport
       val courseTypes = buildCourseTypes(apply.externStudent.std)
       val allCourses = Collections.newSet[Course]
       grades foreach { eg =>
-        val ecs = Collections.newBuffer[ExemptionCourse]
-        val semester = getSemester(eg.acquiredOn)
-        val gradingMode = entityDao.get(classOf[GradingMode], GradingMode.Percent)
-        eg.courses foreach { c =>
-          if (!allCourses.contains(c)) {
-            val ec = ExemptionCourse(c, courseTypes.getOrElse(c, c.courseType), semester, c.examMode, gradingMode, None, None)
-            ecs += ec
+        val courses = Collections.newSet[Course]
+        eg.exempts foreach { c =>
+          if !allCourses.contains(c) then
+            courses += c
             allCourses += c
-          }
         }
-        if (ecs.nonEmpty) {
-          exemptionService.addExemption(eg, ecs.toSeq)
+        if (courses.nonEmpty) {
+          exemptionService.addExemption(eg, courses)
         }
       }
     } else {
@@ -136,7 +134,7 @@ class AuditAction extends RestfulAction[ExchangeExemptApply] with ProjectSupport
       grades foreach { g =>
         g.status = apply.status
       }
-      val courses = grades.map(_.courses).flatten
+      val courses = grades.flatMap(_.exempts)
       val converted = exemptionService.getConvertedGrades(apply.externStudent.std, courses)
       entityDao.remove(converted)
     }

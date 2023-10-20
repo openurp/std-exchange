@@ -23,16 +23,16 @@ import org.beangle.data.excel.schema.ExcelSchema
 import org.beangle.data.transfer.importer.ImportSetting
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.Stream
-import org.beangle.webmvc.support.action.RestfulAction
+import org.beangle.webmvc.support.action.{ImportSupport, RestfulAction}
 import org.openurp.base.std.model.Student
+import org.openurp.edu.exempt.model.ExchExemptCredit
 import org.openurp.starter.web.support.ProjectSupport
-import org.openurp.std.exchange.model.ExchangeExemptCredit
 import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.format.DateTimeFormatter
 
-class CreditAction extends RestfulAction[ExchangeExemptCredit] with ProjectSupport {
+class CreditAction extends RestfulAction[ExchExemptCredit], ProjectSupport, ImportSupport[ExchExemptCredit] {
 
   @response
   def loadStudent: Seq[Properties] = {

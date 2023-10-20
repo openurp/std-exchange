@@ -29,15 +29,16 @@ import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{AuditStatus, ExternSchool}
 import org.openurp.base.std.model.{ExternStudent, Student}
+import org.openurp.edu.exempt.model.{ExchExemptApply, ExchExemptCredit}
+import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.starter.web.support.StudentSupport
-import org.openurp.std.exchange.model.{ExchangeExemptApply, ExchangeExemptCredit, ExchangeGrade}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate}
 
-class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApply] {
+class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] {
 
   var coursePlanProvider: CoursePlanProvider = _
 
@@ -50,14 +51,14 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
 
     if (externStudents.nonEmpty) {
       //find apply
-      val applyQuery = OqlBuilder.from(classOf[ExchangeExemptApply], "apply")
+      val applyQuery = OqlBuilder.from(classOf[ExchExemptApply], "apply")
       applyQuery.where("apply.externStudent in(:ess)", externStudents)
       applyQuery.orderBy("apply.externStudent.beginOn")
       val applies = entityDao.search(applyQuery)
       put("applies", applies.map(x => (x.externStudent, x)).toMap)
 
       //find grades
-      val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
+      val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
         .where("eg.externStudent in(:ess)", externStudents)
       val grades = entityDao.search(gradeQuery)
       val gradeMap = grades.groupBy(_.externStudent)
@@ -76,7 +77,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
 
   /** 第一步,修改校外学习经历 */
   def editExternStudent(): View = {
-    val std = getStudent()
+    val std = getStudent
     val externStudent = getLong("externStudent.id") match {
       case Some(id) => entityDao.get(classOf[ExternStudent], id)
       case None => val ns = new ExternStudent
@@ -93,7 +94,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
 
   /** 保存第一步 */
   def saveExternStudent(): View = {
-    val std = getStudent()
+    val std = getStudent
     var school: ExternSchool = null
     val schoolId = getInt("externStudent.school.id")
     schoolId match {
@@ -141,10 +142,10 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
    * @return
    */
   def editGrades(): View = {
-    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
+    val externStudent = entityDao.get(classOf[ExternStudent], getLongId("externStudent"))
 
     //find grades
-    val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
+    val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
       .where("eg.externStudent  =:es", externStudent)
     val grades = entityDao.search(gradeQuery)
     put("grades", grades)
@@ -159,13 +160,13 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
    * @return
    */
   def saveGrades(): View = {
-    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
+    val externStudent = entityDao.get(classOf[ExternStudent], getLongId("externStudent"))
     val std = externStudent.std
     val apply = getApply(externStudent)
-    val grades = Collections.newBuffer[ExchangeGrade]
+    val grades = Collections.newBuffer[ExternGrade]
     var credits = 0f
     (1 to 30) foreach { i =>
-      val grade = populateEntity(classOf[ExchangeGrade], "grade_" + i)
+      val grade = populateEntity(classOf[ExternGrade], "grade_" + i)
       if (Strings.isNotEmpty(grade.courseName) && Strings.isNotEmpty(grade.scoreText) && null != grade.acquiredOn) {
         grade.externStudent = externStudent
         credits += grade.credits
@@ -194,11 +195,11 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
-  private def getApply(externStudent: ExternStudent): ExchangeExemptApply = {
-    val q = OqlBuilder.from(classOf[ExchangeExemptApply], "apply")
+  private def getApply(externStudent: ExternStudent): ExchExemptApply = {
+    val q = OqlBuilder.from(classOf[ExchExemptApply], "apply")
     q.where("apply.externStudent =:es", externStudent)
     val applies = entityDao.search(q)
-    val apply = applies.headOption.getOrElse(new ExchangeExemptApply)
+    val apply = applies.headOption.getOrElse(new ExchExemptApply)
     apply.externStudent = externStudent
     apply
   }
@@ -208,15 +209,15 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
    * @return
    */
   def editApplies(): View = {
-    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
+    val externStudent = entityDao.get(classOf[ExternStudent], getLongId("externStudent"))
     val apply = getApply(externStudent)
     put("externStudent", externStudent)
     put("apply", apply)
-    entityDao.findBy(classOf[ExchangeExemptCredit], "std", List(apply.externStudent.std)) foreach { e =>
+    entityDao.findBy(classOf[ExchExemptCredit], "std", List(apply.externStudent.std)) foreach { e =>
       put("exemptionCredit", e)
     }
     //find grades
-    val gradeQuery = OqlBuilder.from(classOf[ExchangeGrade], "eg")
+    val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
       .where("eg.externStudent  =:es", externStudent)
     val grades = entityDao.search(gradeQuery)
     put("grades", grades)
@@ -264,28 +265,29 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
    * @return
    */
   def saveApplies(): View = {
-    val externStudent = entityDao.get(classOf[ExternStudent], longId("externStudent"))
+    val externStudent = entityDao.get(classOf[ExternStudent], getLongId("externStudent"))
     val apply = getApply(externStudent)
     if (apply.status == AuditStatus.Passed) {
       return redirect("index", "已经审核通过的申请不能再次冲抵")
     }
     val courseSet = Collections.newSet[Course]
-    val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
+    val grades = entityDao.findBy(classOf[ExternGrade], "externStudent", List(apply.externStudent))
     grades foreach { m =>
       val courses = getAll(s"grade_${m.id}.courses") map (x => entityDao.get(classOf[Course], x.toString.toLong))
-      m.courses.clear()
+      m.exempts.clear()
       courseSet.addAll(courses)
-      m.courses.addAll(courses)
+      m.exempts.addAll(courses)
     }
     apply.updatedAt = Instant.now
     val std = apply.externStudent.std
     apply.exemptionCredits = courseSet.toSeq.map(_.defaultCredits).sum
     entityDao.saveOrUpdate(apply)
-    val limit = entityDao.findBy(classOf[ExchangeExemptCredit], "std", List(std)).headOption
+    val limit = entityDao.findBy(classOf[ExchExemptCredit], "std", List(std)).headOption
     limit match {
       case None => apply.status = AuditStatus.Submited
       case Some(l) =>
-        val totalCredits = entityDao.findBy(classOf[ExchangeExemptApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
+        val totalCredits = entityDao.findBy(classOf[ExchExemptApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
+        apply.auditOpinion = None
         if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
           apply.status = AuditStatus.Submited
         } else {
@@ -309,15 +311,18 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
 
   @mapping(method = "delete")
   def remove(): View = {
-    val std = getStudent()
+    val std = getStudent
 
     val applyId = getLong("apply.id")
     applyId match {
       case Some(id) =>
-        val ea = entityDao.get(classOf[ExchangeExemptApply], id)
+        val ea = entityDao.get(classOf[ExchExemptApply], id)
         if (ea.externStudent.std == std && ea.status != AuditStatus.Passed) {
           ea.transcriptPath foreach { p =>
-            EmsApp.getBlobRepository(true).remove(p)
+            try {
+              EmsApp.getBlobRepository(true).remove(p)
+            } catch
+              case e: Throwable =>
           }
           entityDao.remove(ea)
           redirect("index", "info.remove.success")
@@ -333,7 +338,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchangeExemptApp
             if (apply.persisted) {
               redirect("index", "请先删除冲抵申请")
             } else {
-              val grades = entityDao.findBy(classOf[ExchangeGrade], "externStudent", List(apply.externStudent))
+              val grades = entityDao.findBy(classOf[ExternGrade], "externStudent", List(apply.externStudent))
               entityDao.remove(grades)
               entityDao.remove(externStudent)
               redirect("index", "info.remove.success")

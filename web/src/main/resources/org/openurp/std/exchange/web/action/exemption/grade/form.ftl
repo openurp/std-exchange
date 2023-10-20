@@ -3,29 +3,29 @@
   [@b.toolbar title="校外成绩添加、修改"]
     bar.addBack();
   [/@]
-  [@b.form name="exchangeGradeForm" action="!save" target="exchangeGrades" theme="list"]
+  [@b.form name="externGradeForm" action="!save" target="externGrades" theme="list"]
     [#assign elementSTYLE = "width: 200px"/]
-    [#if (exchangeGrade.id)?exists]
-      [@b.field label="学习经历"]<span style="display: inline-block;">${(exchangeGrade.exchangeStudent.std.code)!} ${(exchangeGrade.exchangeStudent.std.name)!} ${(exchangeGrade.exchangeStudent.school.name)!} ${(exchangeGrade.exchangeStudent.beginOn?string('yyyy-MM'))}~${(exchangeGrade.exchangeStudent.endOn?string("yyyy-MM"))}</span>[/@]
+    [#if (externGrade.id)?exists]
+      [@b.field label="学习经历"]<span style="display: inline-block;">${(externGrade.exchangeStudent.std.code)!} ${(externGrade.exchangeStudent.std.name)!} ${(externGrade.exchangeStudent.school.name)!} ${(externGrade.exchangeStudent.beginOn?string('yyyy-MM'))}~${(externGrade.exchangeStudent.endOn?string("yyyy-MM"))}</span>[/@]
     [#else]
       [@b.field label="学号"]
        <input name="stdCode" style=elementSTYLE placeholder="输入学号后，点击页面空白处，即可获取该学生信息">
        <span id="stdName"></span>
       [/@]
-      [@b.select label="学习经历" id="exchangeStudentSelect" name="exchangeGrade.exchangeStudent.id"  style="width:400px" required="true"/]
+      [@b.select label="学习经历" id="exchangeStudentSelect" name="externGrade.exchangeStudent.id"  style="width:400px" required="true"/]
     [/#if]
-    [@b.textfield label="外校课程" name="exchangeGrade.courseName" value=(exchangeGrade.courseName)! required="true" maxlength="100" style=elementSTYLE/]
-    [@b.textfield label="外校学分" name="exchangeGrade.credits" value=(exchangeGrade.credits)! required="true" maxlength="5" check="match('number')" style=elementSTYLE/]
-    [@b.textfield label="外校得分" name="exchangeGrade.scoreText" value=(exchangeGrade.scoreText)! required="true" maxlength="5" style=elementSTYLE/]
-    [@b.datepicker label="获得日期" name="exchangeGrade.acquiredOn" value=(exchangeGrade.acquiredOn?string('yyyy-MM-dd'))! format="yyyy-MM-dd" required="true" style=elementSTYLE/]
-    [@b.textfield label="备注" name="exchangeGrade.remark" value=(exchangeGrade.remark)! required="false" maxlength="100" style="width:300px"/]
+    [@b.textfield label="外校课程" name="externGrade.courseName" value=(externGrade.courseName)! required="true" maxlength="100" style=elementSTYLE/]
+    [@b.textfield label="外校学分" name="externGrade.credits" value=(externGrade.credits)! required="true" maxlength="5" check="match('number')" style=elementSTYLE/]
+    [@b.textfield label="外校得分" name="externGrade.scoreText" value=(externGrade.scoreText)! required="true" maxlength="5" style=elementSTYLE/]
+    [@b.datepicker label="获得日期" name="externGrade.acquiredOn" value=(externGrade.acquiredOn?string('yyyy-MM-dd'))! format="yyyy-MM-dd" required="true" style=elementSTYLE/]
+    [@b.textfield label="备注" name="externGrade.remark" value=(externGrade.remark)! required="false" maxlength="100" style="width:300px"/]
     <div style="margin-left: 50px;color: blue">说明：一个学生相同获得日期相同课程只能出现一次。</div>
     [@b.formfoot]
-      <input type="hidden" name="exchangeGrade.id" value="${(exchangeGrade.id)!}"/>
+      <input type="hidden" name="externGrade.id" value="${(externGrade.id)!}"/>
       [@b.submit value="提交"/]
     [/@]
   [/@]
-  [#if !(exchangeGrade.id)?exists]
+  [#if !(externGrade.id)?exists]
   <script>
     $(function() {
       function init(form) {
@@ -88,7 +88,7 @@
       }
 
       $(document).ready(function() {
-        init(document.exchangeGradeForm);
+        init(document.externGradeForm);
       });
     });
   </script>
