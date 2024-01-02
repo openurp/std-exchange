@@ -27,12 +27,13 @@ import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.EntityAction
 import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
-import org.openurp.base.model.{AuditStatus, ExternSchool}
+import org.openurp.base.model.{AuditStatus, ExternSchool, Project}
 import org.openurp.base.std.model.{ExternStudent, Student}
 import org.openurp.edu.exempt.model.{ExchExemptApply, ExchExemptCredit}
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
+import org.openurp.edu.service.Features
 import org.openurp.starter.web.support.StudentSupport
 
 import java.time.format.DateTimeFormatter
@@ -49,6 +50,8 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     val externStudents = entityDao.search(query)
     put("externStudents", externStudents)
 
+    given project: Project = std.project
+
     if (externStudents.nonEmpty) {
       //find apply
       val applyQuery = OqlBuilder.from(classOf[ExchExemptApply], "apply")
@@ -64,6 +67,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
       val gradeMap = grades.groupBy(_.externStudent)
       put("gradeMap", gradeMap)
 
+      put("scoreNeeded", getConfig(Features.Exempt.ScoreNeeded))
       //find transcript
       val repo = EmsApp.getBlobRepository(true)
       val paths = applies.filter(_.transcriptPath.isDefined).map(x => (x, repo.url(x.transcriptPath.get)))
@@ -111,7 +115,6 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
             school.updatedAt = Instant.now
             school.code = "user_add_" + System.currentTimeMillis()
             entityDao.saveOrUpdate(school)
-
           }
         }
     }
@@ -144,6 +147,8 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
   def editGrades(): View = {
     val externStudent = entityDao.get(classOf[ExternStudent], getLongId("externStudent"))
 
+    given project: Project = externStudent.std.project
+
     //find grades
     val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
       .where("eg.externStudent  =:es", externStudent)
@@ -151,6 +156,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     put("grades", grades)
     put("externStudent", externStudent)
 
+    put("scoreNeeded", getConfig(Features.Exempt.ScoreNeeded))
     put("apply", getApply(externStudent))
     forward();
   }
@@ -167,9 +173,11 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     var credits = 0f
     (1 to 30) foreach { i =>
       val grade = populateEntity(classOf[ExternGrade], "grade_" + i)
-      if (Strings.isNotEmpty(grade.courseName) && Strings.isNotEmpty(grade.scoreText) && null != grade.acquiredOn) {
+      if (Strings.isNotEmpty(grade.courseName) && null != grade.acquiredOn) {
         grade.externStudent = externStudent
+        if Strings.isBlank(grade.scoreText) then grade.scoreText = "--"
         credits += grade.credits
+        grade.status = AuditStatus.Submited
         grade.updatedAt = Instant.now
         grades += grade
       }
@@ -248,7 +256,10 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     if (emptyCourseTypes.nonEmpty) {
       val typeQuery = OqlBuilder.from(classOf[CourseType], "ct").where("ct.parent in(:parents)", emptyCourseTypes)
       emptyCourseTypes ++= entityDao.search(typeQuery)
-      courses.addAll(entityDao.findBy(classOf[Course], "courseType", emptyCourseTypes))
+      val q = OqlBuilder.from(classOf[Course], "c")
+      q.where("c.project=:project", std.project)
+      q.where("c.endOn is null and c.courseType in(:courseTypes)", emptyCourseTypes)
+      courses.addAll(entityDao.search(q))
     }
 
     val query = OqlBuilder.from[Course](classOf[CourseGrade].getName, "cg")

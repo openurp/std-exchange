@@ -27,17 +27,15 @@ import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{AuditStatus, ExternSchool, Project, Semester}
 import org.openurp.base.std.model.Student
-import org.openurp.code.edu.model.GradingMode
 import org.openurp.code.std.model.StudentStatus
 import org.openurp.edu.exempt.model.ExchExemptApply
-import org.openurp.edu.exempt.service.impl.ExemptionCourse
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
+import org.openurp.edu.service.Features
 import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.service.ExchangeService
 
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
 
@@ -57,7 +55,11 @@ class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
     apply.transcriptPath foreach { p =>
       put("transcriptPath", repo.url(p))
     }
+
+    given project: Project = apply.externStudent.std.project
+
     put("apply", apply)
+    put("scoreNeeded", getConfig(Features.Exempt.ScoreNeeded))
     val grades = entityDao.findBy(classOf[ExternGrade], "externStudent", List(apply.externStudent))
     put("grades", grades)
     forward()

@@ -26,8 +26,8 @@
     <tr>
       <td class="title">培养层次：</td>
       <td>${apply.externStudent.level.name}</td>
-      <td class="title">教学类别：</td>
-      <td>${apply.externStudent.category.name}</td>
+      <td class="title">院系：</td>
+      <td>${std.state.department.name}</td>
       <td class="title">填写时间：</td>
       <td>${(apply.updatedAt?string("yyyy-MM-dd HH:mm"))!}</td>
     </tr>
@@ -44,19 +44,21 @@
     </tr>
   </table>
     [@b.grid items=grades sortable="false" var="grade" ]
-        [@b.row]
-            [@b.col title="序号" width="5%"]${grade_index+1}[/@]
-            [@b.col property="courseName" title="课程名称" width="25%"/]
-            [@b.col property="credits"  title="学分" width="5%"/]
-            [@b.col property="scoreText" title="成绩" width="5%"/]
-            [@b.col property="acquiredOn" title="获得年月" width="10%"]${grade.acquiredOn?string("yyyy-MM")}[/@]
-            [@b.col title="免修冲抵" width="30%"]
-               [#list grade.exempts as c]
-                 ${c.code} ${c.name} ${c.defaultCredits}分[#if c_has_next]<br>[/#if]
-               [/#list]
-            [/@]
-            [@b.col property="remark" title="说明" width="20%"/]
+      [@b.row]
+        [@b.col title="序号" width="5%"]${grade_index+1}[/@]
+        [@b.col property="courseName" title="课程名称"/]
+        [@b.col property="credits"  title="学分" width="5%"/]
+        [@b.col property="acquiredOn" title="获得年月" width="10%"]${grade.acquiredOn?string("yyyy-MM")}[/@]
+        [@b.col title="免修冲抵" width="30%"]
+           [#list grade.exempts as c]
+             ${c.code} ${c.name} ${c.defaultCredits}分[#if c_has_next]<br>[/#if]
+           [/#list]
         [/@]
+        [#if scoreNeeded]
+        [@b.col property="scoreText" title="成绩" width="5%"/]
+        [@b.col property="remark" title="说明" width="20%"/]
+        [/#if]
+      [/@]
     [/@]
 [/@]
   [@b.form name="applyForm" action="!audit"]

@@ -18,20 +18,15 @@
 package org.openurp.std.exchange.service.impl
 
 import org.beangle.commons.collection.Collections
-import org.beangle.data.dao.{EntityDao, OqlBuilder}
+import org.beangle.data.dao.OqlBuilder
 import org.openurp.base.edu.model.Course
-import org.openurp.base.model.{AuditStatus, Semester}
-import org.openurp.base.service.SemesterService
 import org.openurp.base.std.model.Student
-import org.openurp.code.edu.model.CourseTakeType
 import org.openurp.edu.exempt.model.ExchExemptCredit
-import org.openurp.edu.exempt.service.impl.{ExemptionCourse, ExemptionServiceImpl}
+import org.openurp.edu.exempt.service.impl.ExemptionServiceImpl
 import org.openurp.edu.extern.model.ExternGrade
-import org.openurp.edu.grade.model.{CourseGrade, Grade}
-import org.openurp.edu.program.model.{CoursePlan, PlanCourse, Program}
 import org.openurp.std.exchange.service.ExchangeService
 
-import java.time.{Instant, LocalDate}
+import java.time.Instant
 
 class ExchangeServiceImpl extends ExemptionServiceImpl, ExchangeService {
 
@@ -47,7 +42,7 @@ class ExchangeServiceImpl extends ExemptionServiceImpl, ExchangeService {
         e
     }
     val exemptedCourses = Collections.newSet[Course]
-    entityDao.findBy(classOf[ExternGrade], "externStudent.std", List(std)).filter(_.status == AuditStatus.Passed) foreach { eg =>
+    entityDao.findBy(classOf[ExternGrade], "externStudent.std", List(std)) foreach { eg =>
       exemptedCourses ++= eg.exempts
     }
     ec.exempted = exemptedCourses.toList.map(_.defaultCredits).sum

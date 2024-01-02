@@ -18,7 +18,7 @@
     [@b.field label="校外学校"]${externStudent.school.name}(${externStudent.beginOn?string("yyyy-MM")}~${externStudent.endOn?string("yyyy-MM")})[/@]
     [@b.textfield name="comment" label="免修冲抵" disable="true" value="在下面每个成绩中选择一个我校课程，进行匹配冲抵。" style="width:300px;border:0px" comment="外校课程学习成绩"+creditLimitComment/]
     [#list grades?sort_by("id") as m]
-    [@b.select width="300px" label="课程"+(m_index+1) multiple="true" items=planCourseList option=r"${item.code} ${item.name} ${item.getCredits(externStudent.std.level)}分" chosenMin="0" name="grade_${m.id}.courses" comment="${m.courseName} ${m.credits}学分 ${m.scoreText}"]
+    [@b.select width="300px" label="课程"+(m_index+1) multiple="true" items=planCourseList option=r"${item.code} ${item.name} ${item.getCredits(externStudent.std.level)}分" chosenMin="0" name="grade_${m.id}.courses" comment="${m.courseName} ${m.credits}学分"]
      [#list (m.courses)! as course]
       <option value="${(course.id)!}" selected>${(course.code)!} ${(course.name)!} ${course.getCredits(externStudent.std.level)}分</option>
      [/#list]

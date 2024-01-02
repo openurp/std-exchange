@@ -9,7 +9,7 @@
       [@b.boxcol/]
       [@b.col title="学号" property="externStudent.std.code" width="13%"/]
       [@b.col title="姓名" property="externStudent.std.name" width="8%"/]
-      [@b.col title="交流学校" property="school.name"  width="24%"]
+      [@b.col title="交流学校" property="school.name"]
        ${(apply.externStudent.school.name)}
       [/@]
       [@b.col title="学习专业" property="externStudent.majorName" width="15%"/]
