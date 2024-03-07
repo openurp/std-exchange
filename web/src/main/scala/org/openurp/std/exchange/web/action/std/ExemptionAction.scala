@@ -25,11 +25,11 @@ import org.beangle.ems.app.EmsApp
 import org.beangle.web.action.annotation.mapping
 import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.EntityAction
-import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{AuditStatus, ExternSchool, Project}
 import org.openurp.base.std.model.{ExternStudent, Student}
-import org.openurp.edu.exempt.model.{ExchExemptApply, ExchExemptCredit}
+import org.openurp.code.edu.model.CourseType
+import org.openurp.edu.exempt.model.{ExternExemptApply, ExternExemptCredit}
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
@@ -39,7 +39,7 @@ import org.openurp.starter.web.support.StudentSupport
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, LocalDate}
 
-class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] {
+class ExemptionAction extends StudentSupport with EntityAction[ExternExemptApply] {
 
   var coursePlanProvider: CoursePlanProvider = _
 
@@ -52,9 +52,11 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
 
     given project: Project = std.project
 
+    val exemptionCredit = entityDao.findBy(classOf[ExternExemptCredit], "std", std).headOption
+    put("exemptionCredit", exemptionCredit)
     if (externStudents.nonEmpty) {
       //find apply
-      val applyQuery = OqlBuilder.from(classOf[ExchExemptApply], "apply")
+      val applyQuery = OqlBuilder.from(classOf[ExternExemptApply], "apply")
       applyQuery.where("apply.externStudent in(:ess)", externStudents)
       applyQuery.orderBy("apply.externStudent.beginOn")
       val applies = entityDao.search(applyQuery)
@@ -203,11 +205,11 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     redirect("editApplies", "&externStudent.id=" + externStudent.id, "info.save.success")
   }
 
-  private def getApply(externStudent: ExternStudent): ExchExemptApply = {
-    val q = OqlBuilder.from(classOf[ExchExemptApply], "apply")
+  private def getApply(externStudent: ExternStudent): ExternExemptApply = {
+    val q = OqlBuilder.from(classOf[ExternExemptApply], "apply")
     q.where("apply.externStudent =:es", externStudent)
     val applies = entityDao.search(q)
-    val apply = applies.headOption.getOrElse(new ExchExemptApply)
+    val apply = applies.headOption.getOrElse(new ExternExemptApply)
     apply.externStudent = externStudent
     apply
   }
@@ -221,7 +223,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     val apply = getApply(externStudent)
     put("externStudent", externStudent)
     put("apply", apply)
-    entityDao.findBy(classOf[ExchExemptCredit], "std", List(apply.externStudent.std)) foreach { e =>
+    entityDao.findBy(classOf[ExternExemptCredit], "std", List(apply.externStudent.std)) foreach { e =>
       put("exemptionCredit", e)
     }
     //find grades
@@ -293,11 +295,11 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     val std = apply.externStudent.std
     apply.exemptionCredits = courseSet.toSeq.map(_.defaultCredits).sum
     entityDao.saveOrUpdate(apply)
-    val limit = entityDao.findBy(classOf[ExchExemptCredit], "std", List(std)).headOption
+    val limit = entityDao.findBy(classOf[ExternExemptCredit], "std", List(std)).headOption
     limit match {
       case None => apply.status = AuditStatus.Submited
       case Some(l) =>
-        val totalCredits = entityDao.findBy(classOf[ExchExemptApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
+        val totalCredits = entityDao.findBy(classOf[ExternExemptApply], "externStudent.std", List(std)).map(_.exemptionCredits).sum
         apply.auditOpinion = None
         if (l.maxValue == 0 || java.lang.Float.compare(l.maxValue, totalCredits) >= 0) {
           apply.status = AuditStatus.Submited
@@ -327,7 +329,7 @@ class ExemptionAction extends StudentSupport with EntityAction[ExchExemptApply] 
     val applyId = getLong("apply.id")
     applyId match {
       case Some(id) =>
-        val ea = entityDao.get(classOf[ExchExemptApply], id)
+        val ea = entityDao.get(classOf[ExternExemptApply], id)
         if (ea.externStudent.std == std && ea.status != AuditStatus.Passed) {
           ea.transcriptPath foreach { p =>
             try {

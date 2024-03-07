@@ -8,9 +8,13 @@
     </div>
     <ul class="nav navbar-nav navbar-right">
         <li>
+        [#if exemptionCredit??]
         [@b.form class="navbar-form navbar-left" role="search" action="!editNew"]
-            [@b.a class="btn btn-sm btn-info" href="!editExternStudent?project.id="+project.id]<i class="fas fa-plus"></i>添加[/@]
+            [@b.a class="btn btn-sm btn-info" href="!editExternStudent?project.id="+project.id]<i class="fas fa-plus"></i>添加(上限${exemptionCredit.maxValue})[/@]
         [/@]
+        [#else]
+         没有你的冲抵上限，尚不能添加。
+        [/#if]
         </li>
     </ul>
     </div>

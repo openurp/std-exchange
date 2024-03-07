@@ -21,7 +21,7 @@ import org.beangle.commons.collection.Collections
 import org.beangle.data.dao.OqlBuilder
 import org.openurp.base.edu.model.Course
 import org.openurp.base.std.model.Student
-import org.openurp.edu.exempt.model.ExchExemptCredit
+import org.openurp.edu.exempt.model.ExternExemptCredit
 import org.openurp.edu.exempt.service.impl.ExemptionServiceImpl
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.std.exchange.service.ExchangeService
@@ -32,12 +32,12 @@ class ExchangeServiceImpl extends ExemptionServiceImpl, ExchangeService {
 
   override def recalcExemption(std: Student): Unit = {
     //重新统计已经免修的学分
-    val ecBuilder = OqlBuilder.from(classOf[ExchExemptCredit], "ec")
+    val ecBuilder = OqlBuilder.from(classOf[ExternExemptCredit], "ec")
     ecBuilder.where("ec.std=:std", std)
     val ec = entityDao.search(ecBuilder).headOption match {
       case Some(e) => e
       case None =>
-        val e = new ExchExemptCredit
+        val e = new ExternExemptCredit
         e.std = std
         e
     }

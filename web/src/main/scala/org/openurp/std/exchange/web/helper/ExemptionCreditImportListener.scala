@@ -22,7 +22,7 @@ import org.beangle.data.dao.{EntityDao, OqlBuilder}
 import org.beangle.data.transfer.importer.{ImportListener, ImportResult}
 import org.openurp.base.model.Project
 import org.openurp.base.std.model.Student
-import org.openurp.edu.exempt.model.ExchExemptCredit
+import org.openurp.edu.exempt.model.ExternExemptCredit
 
 import java.time.Instant
 
@@ -50,14 +50,14 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
         tr.addFailure("错误的学分上限", transfer.curData.get("maxValue").orNull)
         return
       }
-      val query = OqlBuilder.from(classOf[ExchExemptCredit], "ec")
+      val query = OqlBuilder.from(classOf[ExternExemptCredit], "ec")
       query.where("ec.std=:std", std)
       val ecs = entityDao.search(query)
       val ec =
         if (ecs.nonEmpty) {
           ecs.head
         } else {
-          val ec = new ExchExemptCredit
+          val ec = new ExternExemptCredit
           ec.std = std
           ec
         }
@@ -69,7 +69,7 @@ class ExemptionCreditImportListener(project: Project, entityDao: EntityDao) exte
 
   override def onItemFinish(tr: ImportResult): Unit = {
     if (null != transfer.current) {
-      val ec = transfer.current.asInstanceOf[ExchExemptCredit]
+      val ec = transfer.current.asInstanceOf[ExternExemptCredit]
       entityDao.saveOrUpdate(ec)
     }
   }

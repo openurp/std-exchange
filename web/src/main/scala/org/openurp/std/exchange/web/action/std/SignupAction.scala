@@ -184,7 +184,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
     put("scheme", scheme)
     put("std", std)
     val stdGpa = getStdGpa(std)
-    apply.gpa = stdGpa.gpa
+    apply.gpa = stdGpa.gpa.floatValue
     apply.credits = stdGpa.credits
 
     put("stdGpa", stdGpa)
@@ -239,7 +239,7 @@ class SignupAction extends StudentSupport with EntityAction[ExchangeApply] {
     apply.mobile = user.mobile.get
     apply.address = contact.address.get
     val stdGpa = getStdGpa(std)
-    apply.gpa = stdGpa.gpa
+    apply.gpa = stdGpa.gpa.floatValue()
     apply.credits = stdGpa.credits
 
     entityDao.saveOrUpdate(apply)

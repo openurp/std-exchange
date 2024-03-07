@@ -23,12 +23,12 @@ import org.beangle.ems.app.EmsApp
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.View
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.base.edu.code.CourseType
 import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{AuditStatus, ExternSchool, Project, Semester}
 import org.openurp.base.std.model.Student
+import org.openurp.code.edu.model.CourseType
 import org.openurp.code.std.model.StudentStatus
-import org.openurp.edu.exempt.model.ExchExemptApply
+import org.openurp.edu.exempt.model.ExternExemptApply
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.edu.service.Features
@@ -37,7 +37,7 @@ import org.openurp.std.exchange.service.ExchangeService
 
 import java.time.LocalDate
 
-class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
+class AuditAction extends RestfulAction[ExternExemptApply] with ProjectSupport {
 
   var coursePlanProvider: CoursePlanProvider = _
 
@@ -50,7 +50,7 @@ class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
   }
 
   override def info(id: String): View = {
-    val apply = entityDao.get(classOf[ExchExemptApply], id.toLong)
+    val apply = entityDao.get(classOf[ExternExemptApply], id.toLong)
     val repo = EmsApp.getBlobRepository(true)
     apply.transcriptPath foreach { p =>
       put("transcriptPath", repo.url(p))
@@ -65,7 +65,7 @@ class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
     forward()
   }
 
-  override protected def editSetting(entity: ExchExemptApply): Unit = {
+  override protected def editSetting(entity: ExternExemptApply): Unit = {
     put("schools", entityDao.getAll(classOf[ExternSchool]))
     val project = getProject
     put("levels", project.levels)
@@ -110,7 +110,7 @@ class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
   def audit(): View = {
     val esId = getLongId("apply")
     val auditOpinion = get("auditOpinion")
-    val apply = entityDao.get(classOf[ExchExemptApply], esId)
+    val apply = entityDao.get(classOf[ExternExemptApply], esId)
     val passed = getBoolean("passed", false)
     val gradeQuery = OqlBuilder.from(classOf[ExternGrade], "eg")
       .where("eg.externStudent=:es", apply.externStudent)
@@ -128,7 +128,7 @@ class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
             allCourses += c
         }
         if (courses.nonEmpty) {
-          exemptionService.addExemption(eg, courses)
+          exemptionService.addExemption(eg, courses, None)
         }
       }
     } else {

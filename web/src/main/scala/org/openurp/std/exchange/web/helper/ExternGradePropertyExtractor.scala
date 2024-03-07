@@ -17,13 +17,13 @@
 
 package org.openurp.std.exchange.web.helper
 
-import org.beangle.data.transfer.exporter.DefaultPropertyExtractor
+import org.beangle.commons.bean.DefaultPropertyExtractor
 import org.openurp.edu.extern.model.ExternGrade
 
 import java.time.format.DateTimeFormatter
 
 class ExternGradePropertyExtractor extends DefaultPropertyExtractor {
-  override def getPropertyValue(target: Object, property: String): Any = {
+  override def get(target: Object, property: String): Any = {
     val eg = target.asInstanceOf[ExternGrade]
     property match {
       case "courseCode" => "01"
@@ -39,7 +39,7 @@ class ExternGradePropertyExtractor extends DefaultPropertyExtractor {
           eg.exempts.map(c => s"${c.name} ${c.defaultCredits}分").mkString("\r\n")
         }
       case _ =>
-        super.getPropertyValue(target, property)
+        super.get(target, property)
     }
   }
 }

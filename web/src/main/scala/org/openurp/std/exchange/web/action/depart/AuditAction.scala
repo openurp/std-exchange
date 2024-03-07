@@ -18,9 +18,9 @@
 package org.openurp.std.exchange.web.action.depart
 
 import org.beangle.webmvc.support.action.RestfulAction
-import org.openurp.edu.exempt.model.ExchExemptApply
+import org.openurp.edu.exempt.model.ExternExemptApply
 import org.openurp.starter.web.support.ProjectSupport
 
-class AuditAction extends RestfulAction[ExchExemptApply] with ProjectSupport {
+class AuditAction extends RestfulAction[ExternExemptApply] with ProjectSupport {
 
 }

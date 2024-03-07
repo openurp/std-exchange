@@ -25,14 +25,14 @@ import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.Stream
 import org.beangle.webmvc.support.action.{ImportSupport, RestfulAction}
 import org.openurp.base.std.model.Student
-import org.openurp.edu.exempt.model.ExchExemptCredit
+import org.openurp.edu.exempt.model.ExternExemptCredit
 import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.time.format.DateTimeFormatter
 
-class CreditAction extends RestfulAction[ExchExemptCredit], ProjectSupport, ImportSupport[ExchExemptCredit] {
+class CreditAction extends RestfulAction[ExternExemptCredit], ProjectSupport, ImportSupport[ExternExemptCredit] {
 
   @response
   def loadStudent: Seq[Properties] = {

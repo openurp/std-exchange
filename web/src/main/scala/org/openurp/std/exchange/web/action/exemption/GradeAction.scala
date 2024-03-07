@@ -27,7 +27,6 @@ import org.openurp.base.edu.model.Course
 import org.openurp.base.model.{Project, Semester}
 import org.openurp.base.std.model.ExternStudent
 import org.openurp.code.edu.model.{CourseTakeType, GradingMode}
-import org.openurp.edu.exempt.service.impl.ExemptionCourse
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
@@ -93,7 +92,7 @@ class GradeAction extends RestfulAction[ExternGrade], ProjectSupport, ExportSupp
         cs.add(pc.course)
       }
     }
-    this.exemptionService.addExemption(eg, cs)
+    this.exemptionService.addExemption(eg, cs, None)
     redirect("search", "info.action.success")
   }
 
