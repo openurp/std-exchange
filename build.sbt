@@ -23,18 +23,16 @@ ThisBuild / developers := List(
 ThisBuild / description := "OpenURP Std Exchange"
 ThisBuild / homepage := Some(url("http://openurp.github.io/std-exchange/index.html"))
 
-val apiVer = "0.37.2"
-val starterVer = "0.3.24"
-val baseVer = "0.4.20"
-val eduCoreVer = "0.0.19"
+val apiVer = "0.38.1"
+val starterVer = "0.3.31"
+val baseVer = "0.4.23"
+val eduCoreVer = "0.2.2"
 val openurp_edu_api = "org.openurp.edu" % "openurp-edu-api" % apiVer
 val openurp_std_api = "org.openurp.std" % "openurp-std-api" % apiVer
 val openurp_stater_web = "org.openurp.starter" % "openurp-starter-web" % starterVer
 val openurp_base_tag = "org.openurp.base" % "openurp-base-tag" % baseVer
 val openurp_edu_core = "org.openurp.edu" % "openurp-edu-core" % eduCoreVer
 
-val ojdbc11 = "com.oracle.database.jdbc" % "ojdbc11" % "23.2.0.0"
-val orai18n = "com.oracle.database.nls" % "orai18n" % "23.2.0.0"
 lazy val root = (project in file("."))
   .settings(
     name := "openurp-std-exchange-parent"
@@ -51,7 +49,7 @@ lazy val web = (project in file("web"))
   .settings(
     name := "openurp-std-exchange-web",
     common,
-    libraryDependencies ++= Seq(openurp_stater_web, openurp_base_tag, ojdbc11, orai18n)
+    libraryDependencies ++= Seq(openurp_stater_web, openurp_base_tag)
   ).dependsOn(core)
 
 lazy val webapp = (project in file("webapp"))

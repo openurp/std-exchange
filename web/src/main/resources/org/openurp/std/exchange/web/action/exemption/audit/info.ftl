@@ -40,7 +40,7 @@
          [#else]--[/#if]
       </td>
       <td class="title">审核状态：</td>
-      <td><span class="[#if apply.status=="通过"]text-success[#else]text-danger[/#if]">${apply.status}${apply.auditOpinion!}</span></td>
+      <td><span class="[#if apply.status.id=100]text-success[#else]text-danger[/#if]">${apply.status}${apply.auditOpinion!}</span></td>
     </tr>
   </table>
     [@b.grid items=grades sortable="false" var="grade" ]

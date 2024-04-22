@@ -210,6 +210,9 @@ class ExemptionAction extends StudentSupport with EntityAction[ExternExemptApply
     q.where("apply.externStudent =:es", externStudent)
     val applies = entityDao.search(q)
     val apply = applies.headOption.getOrElse(new ExternExemptApply)
+    if (null == apply.semester) {
+      apply.semester = semesterService.get(externStudent.std.project, LocalDate.now)
+    }
     apply.externStudent = externStudent
     apply
   }

@@ -19,7 +19,7 @@ package org.openurp.std.exchange.web.helper
 
 import org.beangle.commons.lang.Numbers
 import org.beangle.data.dao.{EntityDao, OqlBuilder}
-import org.beangle.data.transfer.importer.{ImportListener, ImportResult}
+import org.beangle.doc.transfer.importer.{ImportListener, ImportResult}
 import org.openurp.base.model.Project
 import org.openurp.base.std.model.Student
 import org.openurp.edu.exempt.model.ExternExemptCredit

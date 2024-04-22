@@ -19,7 +19,7 @@ package org.openurp.std.exchange.web.action.exemption
 
 import org.beangle.commons.collection.{Collections, Properties}
 import org.beangle.data.dao.OqlBuilder
-import org.beangle.data.transfer.exporter.ExportContext
+import org.beangle.doc.transfer.exporter.ExportContext
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.{PathView, View}
 import org.beangle.webmvc.support.action.{ExportSupport, RestfulAction}

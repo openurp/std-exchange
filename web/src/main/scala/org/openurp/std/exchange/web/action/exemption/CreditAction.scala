@@ -19,8 +19,8 @@ package org.openurp.std.exchange.web.action.exemption
 
 import org.beangle.commons.collection.Properties
 import org.beangle.data.dao.OqlBuilder
-import org.beangle.data.excel.schema.ExcelSchema
-import org.beangle.data.transfer.importer.ImportSetting
+import org.beangle.doc.excel.schema.ExcelSchema
+import org.beangle.doc.transfer.importer.ImportSetting
 import org.beangle.web.action.annotation.response
 import org.beangle.web.action.view.Stream
 import org.beangle.webmvc.support.action.{ImportSupport, RestfulAction}
@@ -30,7 +30,6 @@ import org.openurp.starter.web.support.ProjectSupport
 import org.openurp.std.exchange.web.helper.ExemptionCreditImportListener
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
-import java.time.format.DateTimeFormatter
 
 class CreditAction extends RestfulAction[ExternExemptCredit], ProjectSupport, ImportSupport[ExternExemptCredit] {
 

@@ -19,6 +19,7 @@ package org.openurp.std.exchange.service
 
 import org.beangle.cdi.bind.BindModule
 import org.openurp.base.service.impl.SemesterServiceImpl
+import org.openurp.edu.grade.service.impl.GradeRateServiceImpl
 import org.openurp.edu.program.domain.{DefaultCoursePlanProvider, DefaultProgramProvider}
 import org.openurp.std.exchange.service.impl.ExchangeServiceImpl
 
@@ -28,5 +29,6 @@ class DefaultModule extends BindModule {
     bind(classOf[DefaultCoursePlanProvider])
     bind(classOf[SemesterServiceImpl])
     bind(classOf[ExchangeServiceImpl])
+    bind(classOf[GradeRateServiceImpl])
   }
 }
