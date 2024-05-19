@@ -28,7 +28,7 @@ import org.openurp.base.model.{AuditStatus, ExternSchool, Project, Semester}
 import org.openurp.base.std.model.Student
 import org.openurp.code.edu.model.CourseType
 import org.openurp.code.std.model.StudentStatus
-import org.openurp.edu.exempt.model.ExternExemptApply
+import org.openurp.edu.exempt.flow.ExternExemptApply
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
 import org.openurp.edu.service.Features

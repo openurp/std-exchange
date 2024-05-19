@@ -2,7 +2,7 @@ import org.openurp.parent.Dependencies.*
 import org.openurp.parent.Settings.*
 
 ThisBuild / organization := "org.openurp.std.exchange"
-ThisBuild / version := "0.0.2-SNAPSHOT"
+ThisBuild / version := "0.0.2"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -23,10 +23,10 @@ ThisBuild / developers := List(
 ThisBuild / description := "OpenURP Std Exchange"
 ThisBuild / homepage := Some(url("http://openurp.github.io/std-exchange/index.html"))
 
-val apiVer = "0.38.1"
-val starterVer = "0.3.31"
-val baseVer = "0.4.23"
-val eduCoreVer = "0.2.2"
+val apiVer = "0.39.1"
+val starterVer = "0.3.32"
+val baseVer = "0.4.24"
+val eduCoreVer = "0.2.6"
 val openurp_edu_api = "org.openurp.edu" % "openurp-edu-api" % apiVer
 val openurp_std_api = "org.openurp.std" % "openurp-std-api" % apiVer
 val openurp_stater_web = "org.openurp.starter" % "openurp-starter-web" % starterVer
@@ -36,7 +36,7 @@ val openurp_edu_core = "org.openurp.edu" % "openurp-edu-core" % eduCoreVer
 lazy val root = (project in file("."))
   .settings(
     name := "openurp-std-exchange-parent"
-  ).aggregate(core, web, webapp)
+  ).aggregate(core, webapp)
 
 lazy val core = (project in file("core"))
   .settings(
@@ -45,18 +45,12 @@ lazy val core = (project in file("core"))
     libraryDependencies ++= Seq(openurp_edu_api, openurp_std_api, beangle_ems_app, openurp_edu_core)
   )
 
-lazy val web = (project in file("web"))
-  .settings(
-    name := "openurp-std-exchange-web",
-    common,
-    libraryDependencies ++= Seq(openurp_stater_web, openurp_base_tag)
-  ).dependsOn(core)
-
 lazy val webapp = (project in file("webapp"))
   .enablePlugins(WarPlugin, TomcatPlugin)
   .settings(
     name := "openurp-std-exchange-webapp",
-    common
-  ).dependsOn(web)
+    common,
+    libraryDependencies ++= Seq(openurp_stater_web, openurp_base_tag)
+  ).dependsOn(core)
 
 publish / skip := true
