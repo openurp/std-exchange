@@ -34,6 +34,7 @@ import org.openurp.edu.exempt.model.ExternExemptCredit
 import org.openurp.edu.extern.model.ExternGrade
 import org.openurp.edu.grade.model.CourseGrade
 import org.openurp.edu.program.domain.CoursePlanProvider
+import org.openurp.edu.program.model.SharePlan
 import org.openurp.edu.service.Features
 import org.openurp.starter.web.support.StudentSupport
 
@@ -242,8 +243,6 @@ class ExemptionAction extends StudentSupport with EntityAction[ExternExemptApply
   private def getPlanCourses(std: Student): collection.Seq[Course] = {
     val courses = Collections.newSet[Course]
     val emptyCourseTypes = Collections.newSet[CourseType]
-
-
     coursePlanProvider.getCoursePlan(std) foreach { plan =>
       for (group <- plan.groups) {
         if (group.planCourses.isEmpty && group.children.isEmpty) {
@@ -258,7 +257,16 @@ class ExemptionAction extends StudentSupport with EntityAction[ExternExemptApply
         }
       }
     }
-
+    val spQuery = OqlBuilder.from(classOf[SharePlan], "sp")
+    spQuery.where("sp.project=:project", std.project)
+    spQuery.where("sp.level=:level and sp.eduType =:eduType", std.level, std.eduType)
+    spQuery.where(":grade between sp.fromGrade.code and sp.toGrade.code", std.state.get.grade.code)
+    entityDao.search(spQuery) foreach { sp =>
+      for (cg <- sp.groups; planCourse <- cg.planCourses) {
+        courses.add(planCourse.course)
+      }
+      sp.groups foreach { cg => emptyCourseTypes.subtractOne(cg.courseType) }
+    }
     if (emptyCourseTypes.nonEmpty) {
       val typeQuery = OqlBuilder.from(classOf[CourseType], "ct").where("ct.parent in(:parents)", emptyCourseTypes)
       emptyCourseTypes ++= entityDao.search(typeQuery)
@@ -267,7 +275,6 @@ class ExemptionAction extends StudentSupport with EntityAction[ExternExemptApply
       q.where("c.endOn is null and c.courseType in(:courseTypes)", emptyCourseTypes)
       courses.addAll(entityDao.search(q))
     }
-
     val query = OqlBuilder.from[Course](classOf[CourseGrade].getName, "cg")
     query.where("cg.std=:std and cg.passed=true", std)
     query.select("cg.course")
