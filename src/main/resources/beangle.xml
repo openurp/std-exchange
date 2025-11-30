@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<beangle xmlns="http://beangle.github.io/schema/framework"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://beangle.github.io/schema/framework http://beangle.github.io/schema/framework-1.0.xsd">
+  <ems app-name="std-exchange-webapp"/>
+
+  <cdi>
+    <module class="org.openurp.starter.web.ProjectModule"/>
+    <module class="org.openurp.std.exchange.web.action.std.DefaultModule"/>
+    <module class="org.openurp.std.exchange.web.action.depart.DefaultModule"/>
+    <module class="org.openurp.std.exchange.web.action.exemption.DefaultModule"/>
+    <module class="org.openurp.std.exchange.web.action.signup.DefaultModule"/>
+
+    <module class="org.openurp.std.exchange.service.DefaultModule"/>
+  </cdi>
+
+  <orm>
+    <mapping class="org.openurp.std.exchange.app.model.DefaultMapping"/>
+    <naming>
+      <profile package="org.openurp.std.exchange.app" pluralize="true" schema="app"/>
+    </naming>
+  </orm>
+
+  <mvc>
+    <profile package="org.openurp.std.exchange.web.action">
+      <url path="/" suffix="" style="seo"/>
+      <interceptor name="web.Interceptor.hibernate"/>
+      <interceptor name="web.Interceptor.security"/>
+    </profile>
+  </mvc>
+
+</beangle>
